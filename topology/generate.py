@@ -576,10 +576,7 @@ def write_to_json(G, output_file, processing_delay_ns, propagation_delay_ns, sum
     vertices = prepare_vertices_for_json_export(G, processing_delay_ns)
     edges = prepare_edges_for_json_export(G, propagation_delay_ns)
 
-    json_output = {'directed': True,
-                   'multigraph': True,
-                   'graph': G.graph,
-                   'nodes': natsorted(vertices.values(), key=lambda k: k['id']),
+    json_output = {'nodes': natsorted(vertices.values(), key=lambda k: k['id']),
                    'links': [value for key, value in edges.items()]}
 
     with open(output_file, 'w') as output_fd:

@@ -1,7 +1,4 @@
 {
-    "directed": true,
-    "multigraph": true,
-    "graph": {},
     "nodes": [
         {
             "id": 0,

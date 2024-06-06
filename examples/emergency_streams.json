@@ -1,57 +1,15 @@
 [
     {
         "streamID": 0,
-        "source": 2,
-        "target": 1,
-        "data_rate": 8000000,
-        "buffer_size": 6000,
-        "route": [
-            {
-                "id": 3,
-                "name": "2-0",
-                "from": 2,
-                "to": 0
-            },
-            {
-                "id": 0,
-                "name": "0-1",
-                "from": 0,
-                "to": 1
-            }
-        ]
-    },
-    {
-        "streamID": 1,
-        "source": 2,
-        "target": 4,
-        "data_rate": 7000000,
-        "buffer_size": 7000,
-        "route": [
-            {
-                "id": 3,
-                "name": "2-0",
-                "from": 2,
-                "to": 0
-            },
-            {
-                "id": 6,
-                "name": "0-4",
-                "from": 0,
-                "to": 4
-            }
-        ]
-    },
-    {
-        "streamID": 2,
-        "source": 1,
+        "source": 5,
         "target": 2,
         "data_rate": 6000000,
-        "buffer_size": 6000,
+        "buffer_size": 9000,
         "route": [
             {
-                "id": 1,
-                "name": "1-0",
-                "from": 1,
+                "id": 9,
+                "name": "5-0",
+                "from": 5,
                 "to": 0
             },
             {
@@ -63,16 +21,16 @@
         ]
     },
     {
-        "streamID": 3,
-        "source": 2,
+        "streamID": 1,
+        "source": 5,
         "target": 3,
-        "data_rate": 5000000,
-        "buffer_size": 2000,
+        "data_rate": 3000000,
+        "buffer_size": 4000,
         "route": [
             {
-                "id": 3,
-                "name": "2-0",
-                "from": 2,
+                "id": 9,
+                "name": "5-0",
+                "from": 5,
                 "to": 0
             },
             {
@@ -84,16 +42,58 @@
         ]
     },
     {
-        "streamID": 4,
-        "source": 3,
-        "target": 5,
-        "data_rate": 3000000,
-        "buffer_size": 9000,
+        "streamID": 2,
+        "source": 4,
+        "target": 1,
+        "data_rate": 5000000,
+        "buffer_size": 1000,
         "route": [
             {
-                "id": 5,
-                "name": "3-0",
-                "from": 3,
+                "id": 7,
+                "name": "4-0",
+                "from": 4,
+                "to": 0
+            },
+            {
+                "id": 0,
+                "name": "0-1",
+                "from": 0,
+                "to": 1
+            }
+        ]
+    },
+    {
+        "streamID": 3,
+        "source": 2,
+        "target": 5,
+        "data_rate": 4000000,
+        "buffer_size": 1000,
+        "route": [
+            {
+                "id": 3,
+                "name": "2-0",
+                "from": 2,
+                "to": 0
+            },
+            {
+                "id": 8,
+                "name": "0-5",
+                "from": 0,
+                "to": 5
+            }
+        ]
+    },
+    {
+        "streamID": 4,
+        "source": 2,
+        "target": 5,
+        "data_rate": 2000000,
+        "buffer_size": 4000,
+        "route": [
+            {
+                "id": 3,
+                "name": "2-0",
+                "from": 2,
                 "to": 0
             },
             {
@@ -107,35 +107,14 @@
     {
         "streamID": 5,
         "source": 3,
-        "target": 1,
-        "data_rate": 6000000,
-        "buffer_size": 3000,
+        "target": 2,
+        "data_rate": 7000000,
+        "buffer_size": 5000,
         "route": [
             {
                 "id": 5,
                 "name": "3-0",
                 "from": 3,
-                "to": 0
-            },
-            {
-                "id": 0,
-                "name": "0-1",
-                "from": 0,
-                "to": 1
-            }
-        ]
-    },
-    {
-        "streamID": 6,
-        "source": 1,
-        "target": 2,
-        "data_rate": 2000000,
-        "buffer_size": 2000,
-        "route": [
-            {
-                "id": 1,
-                "name": "1-0",
-                "from": 1,
                 "to": 0
             },
             {
@@ -147,16 +126,37 @@
         ]
     },
     {
-        "streamID": 7,
-        "source": 3,
-        "target": 5,
-        "data_rate": 3000000,
+        "streamID": 6,
+        "source": 1,
+        "target": 4,
+        "data_rate": 4000000,
         "buffer_size": 8000,
         "route": [
             {
-                "id": 5,
-                "name": "3-0",
-                "from": 3,
+                "id": 1,
+                "name": "1-0",
+                "from": 1,
+                "to": 0
+            },
+            {
+                "id": 6,
+                "name": "0-4",
+                "from": 0,
+                "to": 4
+            }
+        ]
+    },
+    {
+        "streamID": 7,
+        "source": 1,
+        "target": 5,
+        "data_rate": 7000000,
+        "buffer_size": 7000,
+        "route": [
+            {
+                "id": 1,
+                "name": "1-0",
+                "from": 1,
                 "to": 0
             },
             {
@@ -169,10 +169,31 @@
     },
     {
         "streamID": 8,
+        "source": 5,
+        "target": 1,
+        "data_rate": 3000000,
+        "buffer_size": 3000,
+        "route": [
+            {
+                "id": 9,
+                "name": "5-0",
+                "from": 5,
+                "to": 0
+            },
+            {
+                "id": 0,
+                "name": "0-1",
+                "from": 0,
+                "to": 1
+            }
+        ]
+    },
+    {
+        "streamID": 9,
         "source": 3,
-        "target": 4,
-        "data_rate": 9000000,
-        "buffer_size": 2000,
+        "target": 2,
+        "data_rate": 4000000,
+        "buffer_size": 5000,
         "route": [
             {
                 "id": 5,
@@ -181,31 +202,10 @@
                 "to": 0
             },
             {
-                "id": 6,
-                "name": "0-4",
+                "id": 2,
+                "name": "0-2",
                 "from": 0,
-                "to": 4
-            }
-        ]
-    },
-    {
-        "streamID": 9,
-        "source": 2,
-        "target": 3,
-        "data_rate": 5000000,
-        "buffer_size": 6000,
-        "route": [
-            {
-                "id": 3,
-                "name": "2-0",
-                "from": 2,
-                "to": 0
-            },
-            {
-                "id": 4,
-                "name": "0-3",
-                "from": 0,
-                "to": 3
+                "to": 2
             }
         ]
     }
