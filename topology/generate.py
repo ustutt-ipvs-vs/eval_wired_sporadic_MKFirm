@@ -14,7 +14,7 @@ try:
 except ImportError:
     natsorted = sorted
 
-DEBUG = True
+DEBUG = False
 
 if DEBUG:
     import matplotlib.pyplot as plt
@@ -495,29 +495,6 @@ def hierarchical_hybrid_graph(tree_n, backbone_n, min_size, max_size, thin_rando
 
     return G, base_graph, summary_report
 
-
-def calculate_positions(G):
-    positions = graphviz_layout(G)
-
-    min_x = min([positions[v][0] for v in positions.keys()])
-    min_y = min([positions[v][1] for v in positions.keys()])
-    max_x = max([positions[v][0] for v in positions.keys()])
-    max_y = max([positions[v][1] for v in positions.keys()])
-    preferred_min_x = 300
-    preferred_min_y = 300
-    preferred_max_x = 1000
-    preferred_max_y = 1000
-    scale_x = (preferred_max_x - preferred_min_x) / (max_x - min_x)
-    scale_y = (preferred_max_y - preferred_min_y) / (max_y - min_y)
-    normalized_positions = {}
-    for v in positions.keys():
-        normalized_positions[v] = (positions[v][0] * scale_x + preferred_min_x,
-                                   positions[v][1] * scale_y + preferred_min_y)
-
-    for v in G.nodes:
-        G.nodes[v]['_ipvs_position'] = "{},{}".format(normalized_positions[v][0], normalized_positions[v][1])
-
-
 def prepare_vertices_for_json_export(G, processing_delay_ns):
     vertices = {}
     for v0, v1 in G.edges():
@@ -539,9 +516,6 @@ def create_dict_entry_for_vertex(G, vertex, processing_delay_ns):
         'is_switch': ('is_switch' in G.nodes[vertex] and G.nodes[vertex]['is_switch']),
         'fwd_header_b': 24,  # Preamble + Ethernet header
         'queues_per_port': 8,
-        '_ipvs_gw_cluster_id': G.nodes[vertex]['gw_cluster_id'] if 'gw_cluster_id' in G.nodes[vertex] else -1,
-        '_ipvs_segment_id': G.nodes[vertex]['segment_id'] if 'segment_id' in G.nodes[vertex] else -1,
-        '_ipvs_position': G.nodes[vertex]['_ipvs_position'],
     }
     if 'pos' in G.nodes[vertex]: entry['_imd_pos'] = G.nodes[vertex]['pos']
     return entry
@@ -559,9 +533,6 @@ def prepare_edges_for_json_export(G, propagation_delay_ns):
             'target': 'n{}'.format(v1),
             'link_speed_mbps': link_speed_mbps,
             'propagation_delay_ns': propagation_delay_ns,
-            '_ipvs_gw_cluster_id': G.edges[(v0, v1)]['gw_cluster_id'] if 'gw_cluster_id' in G.edges[(v0, v1)] else -1,
-            '_ipvs_out_port': G.edges[(v0, v1)]['out_port'],
-            '_ipvs_in_port': G.edges[(v0, v1)]['in_port']
         }
         edges['_'.join([str(v1), str(v0)])] = {
             'key': 'e{}'.format(len(edges)),
@@ -569,15 +540,6 @@ def prepare_edges_for_json_export(G, propagation_delay_ns):
             'target': 'n{}'.format(v0),
             'link_speed_mbps': link_speed_mbps,
             'propagation_delay_ns': propagation_delay_ns,
-            '_ipvs_gw_cluster_id': G.edges[(v0, v1)]['gw_cluster_id'] if 'gw_cluster_id' in G.edges[(v0, v1)] else -1,
-            # As only one directed edge exists in our graph G, inverting our selector
-            #  from (v0, v1) to (v1, v0) does not invert our edge attributes
-            #  out_port and in_port. This is why we manually invert out_port
-            #  and in_port here.
-            # The edge selector is not inverted. Otherwise this code would break if
-            #  the generation algorithm is changed to contain both directed edges.
-            '_ipvs_out_port': G.edges[(v0, v1)]['in_port'],
-            '_ipvs_in_port': G.edges[(v0, v1)]['out_port']
         }
     return edges
 
@@ -695,14 +657,10 @@ def main(nodes=500, line=False, ring=False, mesh=False, star=False, dumbbell=Fal
     elif fat_tree:
         G = fat_tree_topology(nodes)
 
-    calculate_positions(G)
-
     if DEBUG:
         debug_draw(G)
 
-    switches = list(filter(lambda node: G.nodes[node]['is_switch'] is True, G.nodes))
-
-    assign_port_numbers(G)
+    #assign_port_numbers(G)
 
     if not output_path:
         for edge in G.edges():
