@@ -1,5 +1,4 @@
 from math import ceil
-from typing import List, Any
 
 import graph_tool.all as gt
 
@@ -7,7 +6,7 @@ from streams.stream import Stream
 
 
 # TODO: this might need an update to consider each node's fwd_header_b instead stream.size and header_size (Eike)
-def calc_nowait_e2e_delay(topology: gt.Graph, stream, route, alpha: [float, int], round=False) -> int:
+def calc_nowait_e2e_delay(topology: gt.Graph, stream: Stream, route, round=False) -> int:
     """
     Calculates the e2e delay for a stream.
     """
@@ -19,9 +18,9 @@ def calc_nowait_e2e_delay(topology: gt.Graph, stream, route, alpha: [float, int]
         time += topology.edge_properties['propagation_delay_ns'][e]
         time += int(ceil(stream.frame_size_byte * 8 / (topology.edge_properties['link_speed_mbps'][e] * 1e-3)))
     if round:
-        return int(ceil(time * alpha / 1000) * 1000)
+        return int(ceil(time / 1000) * 1000)
     else:
-        return int(time * alpha)
+        return int(time)
 
 
 def edge_to_unique_string(edge: gt.Edge):
