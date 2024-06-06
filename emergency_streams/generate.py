@@ -2,6 +2,7 @@ import argparse
 import json
 import random
 import configparser
+import os.path
 import numpy as np
 
 from typing import List
