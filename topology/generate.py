@@ -358,15 +358,6 @@ def get_hybrid_graph_input_from_node_no(no_switches):
         ratio_no_of_subtop_nodes * no_switches) + tree_n * 2
 
 
-def test_input():
-    for i in range(50, 3000, 50):
-        _, _, no_nodes = get_hybrid_graph_input_from_node_no(i)
-        if abs(no_nodes - i) > 0.025 * i:
-            print(f"F - target: {i} actual: {no_nodes}")
-        else:
-            print(f"T - target: {i} actual: {no_nodes}")
-
-
 def hierarchical_hybrid_graph(tree_n, backbone_n, min_size, max_size, thin_random=True):
     # Create balanced tree, nodes in tree will be replaced by lines or rings
     base_graph = nx.balanced_tree(tree_n, 2)
