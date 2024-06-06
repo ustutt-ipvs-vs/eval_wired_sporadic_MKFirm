@@ -529,7 +529,6 @@ def create_dict_entry_for_vertex(G, vertex, processing_delay_ns):
         'name': 'n{}'.format(int(vertex)),
         'processing_delay_ns': processing_delay_ns,
         'is_switch': ('is_switch' in G.nodes[vertex] and G.nodes[vertex]['is_switch']),
-        'fwd_header_b': 24,  # Preamble + Ethernet header
         'queues_per_port': 8,
     }
     return entry
