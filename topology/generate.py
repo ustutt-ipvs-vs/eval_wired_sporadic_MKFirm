@@ -702,17 +702,6 @@ def main(nodes=500, line=False, ring=False, mesh=False, star=False, dumbbell=Fal
 
     switches = list(filter(lambda node: G.nodes[node]['is_switch'] is True, G.nodes))
 
-    topology_stats = {
-        'nodes': G.number_of_nodes(),
-        'switches': len(switches),
-        'hosts': len(G.nodes) - len(switches),
-        'edges': G.number_of_edges()
-    }
-    print(topology_stats)
-    # Write stats to file
-
-    print("===")
-
     assign_port_numbers(G)
 
     if not output_path:
@@ -723,8 +712,6 @@ def main(nodes=500, line=False, ring=False, mesh=False, star=False, dumbbell=Fal
             if not os.path.exists(output_path):
                 os.makedirs(output_path)
             output_path = os.path.join(output_path, 'topology')
-        with open(f'{output_path}_stats.json', 'w') as stats_file:
-            json.dump(topology_stats, stats_file)
         if export_summary:
             json_output = write_to_json(G, f'{output_path}.json', processing_delay_ns, propagation_delay_ns, summary)
         else:
