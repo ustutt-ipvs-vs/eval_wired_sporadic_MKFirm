@@ -542,7 +542,7 @@ def prepare_edges_for_json_export(G, propagation_delay_ns):
         link_speed_mbps = 1000
         edges['_'.join([str(v0), str(v1)])] = {
             'id': len(edges),
-            'name': 'e{}'.format(len(edges)),
+            'name': '{}-{}'.format(v0,v1),
             'source': v0,
             'target': v1,
             'link_speed_mbps': link_speed_mbps,
@@ -550,7 +550,7 @@ def prepare_edges_for_json_export(G, propagation_delay_ns):
         }
         edges['_'.join([str(v1), str(v0)])] = {
             'id': len(edges),
-            'name': 'e{}'.format(len(edges)),
+            'name': '{}-{}'.format(v1,v0),
             'source': v1,
             'target': v0,
             'link_speed_mbps': link_speed_mbps,

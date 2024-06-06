@@ -34,6 +34,9 @@ class NetworkGraph:
     def get_node_ids(self):
         return list(self.nodes.keys())
 
+    def get_end_device_ids(self):
+        return [d.id for d in self.nodes.values() if not d.is_switch]
+
     def get_node(self, node_id: str) -> NetworkNode:
         return self.nodes[node_id]
 

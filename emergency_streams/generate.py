@@ -12,14 +12,14 @@ import network.Routing
 parser = argparse.ArgumentParser()
 parser.add_argument('-t', '--topology', help='path to the topology file', type=str, required=True)
 parser.add_argument('-i', '--ini', help='path to the ini file with the stream parameters', type=str, required=True)
-parser.add_argument('-o', '--output', help='path to the output file', type=str, default='emergency_streams.json')
+parser.add_argument('-o', '--output', help='path to the output file', type=str, default='examples/emergency_streams.json')
 
 args = parser.parse_args()
 ##########
 # topology
 ##########
 topology = network.network_graph.NetworkGraph(args.topology)
-device_ids: List[int] = topology.get_node_ids()
+device_ids: List[int] = topology.get_end_device_ids()
 
 ########
 # config
@@ -31,27 +31,27 @@ number_of_streams: int = int(config.get('generic', 'number_of_emergency_streams'
 
 buffer_sizes = np.arange(int(config.get('buffer size', 'min_buffer_size')),
                          int(config.get('buffer size', 'max_buffer_size')),
-                         int(config.get('buffer size', 'buffer_size_step')))
+                         int(config.get('buffer size', 'step_buffer_size')))
 data_rate = np.arange(int(config.get('rate', 'min_rate')),
                       int(config.get('rate', 'max_rate')),
-                      int(config.get('rate', 'rate_step')))
+                      int(config.get('rate', 'step_rate')))
 
 
-def get_random_source_and_destination() -> (int, int):
+def get_random_source_and_target() -> (int, int):
     source = random.choice(device_ids)
-    destination = random.choice([d_id for d_id in device_ids if d_id != source])
-    return source, destination
+    target = random.choice([d_id for d_id in device_ids if d_id != source])
+    return source, target
 
 
 def create_random_emergency_stream(stream_id: int):
-    source, destination = get_random_source_and_destination()
+    source, target = get_random_source_and_target()
     rate = random.choice(data_rate)
     buffer_size = random.choice(buffer_sizes)
 
-    route = network.Routing.get_dijkstra_shortest_path(source, destination, topology)
+    route = network.Routing.get_dijkstra_shortest_path(source, target, topology)
 
-    return {'streamID': stream_id, 'source': source, 'destination': destination, 'data rate': rate,
-            'buffer size': buffer_size, 'route': network.Routing.route_to_json_ready(route)}
+    return {'streamID': int(stream_id), 'source': int(source), 'target': int(target), 'data_rate': int(rate),
+            'buffer_size': int(buffer_size), 'route': network.Routing.route_to_json_ready(route)}
 
 
 ################

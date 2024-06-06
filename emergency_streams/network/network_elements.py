@@ -17,7 +17,7 @@ class EgressPort:
 
     def __init__(self, json_link):
         if json_link is not None:
-            self.id = int(json_link['key'])
+            self.id = int(json_link['id'])
             self.name = json_link['name']
             self.host_node = json_link['source']
             self.destination_node = json_link['target']

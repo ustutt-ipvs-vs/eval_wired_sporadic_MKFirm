@@ -72,7 +72,7 @@ def route_to_json_ready(route: List[EgressPort]):
     output = []
     for egress_port in route:
         output.append({'id': int(egress_port.id),
-                       'name': str(egress_port.id),
+                       'name': str(egress_port.name),
                        'from': int(egress_port.host_node),
                        'to': int(egress_port.destination_node)})
     return output
