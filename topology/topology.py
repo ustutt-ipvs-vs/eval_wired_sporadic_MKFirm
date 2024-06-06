@@ -11,18 +11,14 @@ def parse_topology(topology_path):
     with open(topology_path, 'r') as topology_fd:
         topology_data = json.load(topology_fd)
 
-        e_id = topology.new_edge_property('string')
-        topology.edge_properties['e_id'] = e_id
+        e_id = topology.new_edge_property('int')
+        topology.edge_properties['id'] = e_id
         link_speed = topology.new_edge_property('int')
         topology.edge_properties['link_speed_mbps'] = link_speed
         propagation_delay = topology.new_edge_property('int')
         topology.edge_properties['propagation_delay_ns'] = propagation_delay
-        egw_cluster_id = topology.new_edge_property('int')
-        topology.edge_properties['egw_cluster_id'] = egw_cluster_id
-        out_port = topology.new_edge_property('int')
-        topology.edge_properties['out_port'] = out_port
-        in_port = topology.new_edge_property('int')
-        topology.edge_properties['in_port'] = in_port
+        egw_cluster_id = topology.new_edge_property('string')
+        topology.edge_properties['name'] = egw_cluster_id
 
         v_id = topology.new_vertex_property('string')
         topology.vertex_properties['v_id'] = v_id
@@ -34,10 +30,10 @@ def parse_topology(topology_path):
 
         # Add edges: source -> target
         topology.add_edge_list(
-            [(vertex_dict[edge['source']], vertex_dict[edge['target']], edge['key'], edge['link_speed_mbps'],
-              edge['propagation_delay_ns'], edge['_ipvs_gw_cluster_id'], edge['_ipvs_out_port'], edge['_ipvs_in_port'])
+            [(vertex_dict[edge['source']], vertex_dict[edge['target']], edge['id'], edge['link_speed_mbps'],
+              edge['propagation_delay_ns'], edge['name'])
              for edge in topology_data['links']],
-            eprops=[e_id, link_speed, propagation_delay, egw_cluster_id, out_port, in_port])
+            eprops=[e_id, link_speed, propagation_delay])
 
         # Add edges: target -> source
         # topology.add_edge_list(
@@ -72,15 +68,6 @@ def parse_topology(topology_path):
             processing_delay[v] = vertex['processing_delay_ns']
             is_switch[v] = vertex['is_switch']
             queues_per_port[v] = vertex['queues_per_port']
-            fwd_header_b[v] = vertex['fwd_header_b']
-
-            if "_ipvs_position" in vertex:
-                position[v] = vertex['_ipvs_position']
-            if '_ipvs_segment_id' in vertex:
-                segment_id[v] = vertex['_ipvs_segment_id']
-            if '_ipvs_gw_cluster_id' in vertex:
-                vgw_cluster_id[v] = vertex['_ipvs_gw_cluster_id']
-
 
     return topology
 

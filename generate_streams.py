@@ -4,6 +4,7 @@ import argparse
 import json
 import random
 import configparser
+import os.path
 from typing import List
 
 import graph_tool.all as gt
@@ -25,13 +26,14 @@ args = parser.parse_args()
 
 # read config file
 config = configparser.ConfigParser()
+print(os.path.isfile(args.ini))
 config.read(args.ini)
 
-number_of_streams: int = int(config.get('generic', 'number_of_tt_streams'))
-periods_ns: List[int] = [period_us * 1000 for period_us in json.loads(config.get('generic', 'periods'))]
+number_of_streams: int = int(config['generic']['number_of_tt_streams'])
+periods_ns: List[int] = [period_us * 1000 for period_us in json.loads(config.get('generic', 'periods_in_us'))]
 min_frame_size_byte: int = int(config.get('generic', 'min_frame_size_byte'))
 max_frame_size_byte: int = int(config.get('generic', 'max_frame_size_byte'))
-max_delay_percentages: List[float] = json.loads(config.get('generic', 'max_delay_multiples'))
+max_delay_percentages: List[float] = json.loads(config.get('generic', 'max_delay_percentage'))
 
 # read topology
 topology = parse_topology(args.topology)
@@ -45,11 +47,11 @@ def generate_stream(stream_id):
     stream.cycle_time_ns = random.choice(periods_ns)
 
     source_vertex = random.choice(hosts)
-    stream.source = topology.vp["v_id"][source_vertex]
+    stream.source = int(topology.vp["v_id"][source_vertex])
     target_vertex = random.choice([n for n in hosts if n != stream.source])
-    stream.target = topology.vp["v_id"][target_vertex]
+    stream.target = int(topology.vp["v_id"][target_vertex])
 
-    route = gt.shortest_path(topology, stream.source, stream.target)[1]
+    route = gt.shortest_path(topology, source_vertex, target_vertex)[1]
     if not route:
         print(
             f'Warning: For source {stream.source} -> {stream.target}, there is no route')
@@ -59,7 +61,7 @@ def generate_stream(stream_id):
     # enforce max delay = cycle time
     delay_percentage = min(1.0, random.choice(max_delay_percentages))
     max_slack = stream.cycle_time_ns - no_wait_e2e_delay
-    stream.deadline_ns = max_slack * delay_percentage + no_wait_e2e_delay
+    stream.deadline_ns = int(max_slack * delay_percentage + no_wait_e2e_delay)
 
     # prevent rounding issues
     if delay_percentage == 0.0:
@@ -78,4 +80,4 @@ for new_stream_id in range(number_of_streams):
     streams.append(generate_stream(new_stream_id))
 
 with open(args.output, 'w') as output:
-    json.dump(streams, output)
+    json.dump([s.toJSON() for s in streams], output, indent=4)
