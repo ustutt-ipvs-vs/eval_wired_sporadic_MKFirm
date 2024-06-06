@@ -1,0 +1,92 @@
+[
+    {
+        "id": 0,
+        "name": "stream_0",
+        "source": 4,
+        "target": 2,
+        "frame_size_byte": 562,
+        "cycle_time_ns": 200000,
+        "deadline_ns": 154000
+    },
+    {
+        "id": 1,
+        "name": "stream_1",
+        "source": 5,
+        "target": 4,
+        "frame_size_byte": 1395,
+        "cycle_time_ns": 400000,
+        "deadline_ns": 307250
+    },
+    {
+        "id": 2,
+        "name": "stream_2",
+        "source": 4,
+        "target": 3,
+        "frame_size_byte": 81,
+        "cycle_time_ns": 300000,
+        "deadline_ns": 300000
+    },
+    {
+        "id": 3,
+        "name": "stream_3",
+        "source": 2,
+        "target": 5,
+        "frame_size_byte": 85,
+        "cycle_time_ns": 100000,
+        "deadline_ns": 54000
+    },
+    {
+        "id": 4,
+        "name": "stream_4",
+        "source": 3,
+        "target": 1,
+        "frame_size_byte": 840,
+        "cycle_time_ns": 100000,
+        "deadline_ns": 80000
+    },
+    {
+        "id": 5,
+        "name": "stream_5",
+        "source": 3,
+        "target": 1,
+        "frame_size_byte": 632,
+        "cycle_time_ns": 200000,
+        "deadline_ns": 200000
+    },
+    {
+        "id": 6,
+        "name": "stream_6",
+        "source": 1,
+        "target": 4,
+        "frame_size_byte": 442,
+        "cycle_time_ns": 300000,
+        "deadline_ns": 228500
+    },
+    {
+        "id": 7,
+        "name": "stream_7",
+        "source": 4,
+        "target": 5,
+        "frame_size_byte": 739,
+        "cycle_time_ns": 100000,
+        "deadline_ns": 59500
+    },
+    {
+        "id": 8,
+        "name": "stream_8",
+        "source": 4,
+        "target": 2,
+        "frame_size_byte": 784,
+        "cycle_time_ns": 200000,
+        "deadline_ns": 154750
+    },
+    {
+        "id": 9,
+        "name": "stream_9",
+        "source": 3,
+        "target": 2,
+        "frame_size_byte": 1105,
+        "cycle_time_ns": 100000,
+        "deadline_ns": 81250
+    }
+]
