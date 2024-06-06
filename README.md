@@ -1,3 +1,11 @@
+# Install requirements
+For Linux / WSL.
+```shell
+pip install networkx
+pip install pygraphviz
+sudo apt-get install graphviz graphviz-dev
+```
+
 # Generate Topology
 
 Example for a star topology:
