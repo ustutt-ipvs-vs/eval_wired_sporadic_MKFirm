@@ -33,16 +33,16 @@ if not os.path.isfile(args.ini):
     raise FileNotFoundError
 config.read(args.ini)
 
-number_of_streams: int = int(config['generic']['number_of_tt_streams'])
+number_of_streams: int = int(config.get('generic', 'number_of_tt_streams'))
 periods_ns: List[int] = [period_us * 1000 for period_us in json.loads(config.get('generic', 'periods_in_us'))]
 min_frame_size_byte: int = int(config.get('generic', 'min_frame_size_byte'))
 max_frame_size_byte: int = int(config.get('generic', 'max_frame_size_byte'))
 max_delay_percentages: List[float] = json.loads(config.get('generic', 'max_delay_percentage'))
 
 # read topology
-topology = parse_topology(args.topology)
 if not os.path.isfile(args.topology):
     raise FileNotFoundError
+topology = parse_topology(args.topology)
 hosts: List[gt.Vertex] = [v for v in topology.vertices() if not topology.vp.is_switch[v]]
 
 
