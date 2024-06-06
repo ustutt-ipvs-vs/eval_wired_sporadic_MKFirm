@@ -539,11 +539,7 @@ def create_dict_entry_for_vertex(G, vertex, processing_delay_ns):
         'is_switch': ('is_switch' in G.nodes[vertex] and G.nodes[vertex]['is_switch']),
         'fwd_header_b': 24,  # Preamble + Ethernet header
         'queues_per_port': 8,
-        '_ipvs_gw_cluster_id': G.nodes[vertex]['gw_cluster_id'] if 'gw_cluster_id' in G.nodes[vertex] else -1,
-        '_ipvs_segment_id': G.nodes[vertex]['segment_id'] if 'segment_id' in G.nodes[vertex] else -1,
-        '_ipvs_position': G.nodes[vertex]['_ipvs_position'],
     }
-    if 'pos' in G.nodes[vertex]: entry['_imd_pos'] = G.nodes[vertex]['pos']
     return entry
 
 
@@ -559,9 +555,6 @@ def prepare_edges_for_json_export(G, propagation_delay_ns):
             'target': 'n{}'.format(v1),
             'link_speed_mbps': link_speed_mbps,
             'propagation_delay_ns': propagation_delay_ns,
-            '_ipvs_gw_cluster_id': G.edges[(v0, v1)]['gw_cluster_id'] if 'gw_cluster_id' in G.edges[(v0, v1)] else -1,
-            '_ipvs_out_port': G.edges[(v0, v1)]['out_port'],
-            '_ipvs_in_port': G.edges[(v0, v1)]['in_port']
         }
         edges['_'.join([str(v1), str(v0)])] = {
             'key': 'e{}'.format(len(edges)),
@@ -569,15 +562,6 @@ def prepare_edges_for_json_export(G, propagation_delay_ns):
             'target': 'n{}'.format(v0),
             'link_speed_mbps': link_speed_mbps,
             'propagation_delay_ns': propagation_delay_ns,
-            '_ipvs_gw_cluster_id': G.edges[(v0, v1)]['gw_cluster_id'] if 'gw_cluster_id' in G.edges[(v0, v1)] else -1,
-            # As only one directed edge exists in our graph G, inverting our selector
-            #  from (v0, v1) to (v1, v0) does not invert our edge attributes
-            #  out_port and in_port. This is why we manually invert out_port
-            #  and in_port here.
-            # The edge selector is not inverted. Otherwise this code would break if
-            #  the generation algorithm is changed to contain both directed edges.
-            '_ipvs_out_port': G.edges[(v0, v1)]['in_port'],
-            '_ipvs_in_port': G.edges[(v0, v1)]['out_port']
         }
     return edges
 
