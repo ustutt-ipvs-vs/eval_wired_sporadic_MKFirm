@@ -6,11 +6,14 @@ import random
 import configparser
 import os.path
 from typing import List
+import sys
+# setting path for import topology
+sys.path.append('../scenario_generator')
 
 import graph_tool.all as gt
 
-from streams.stream import Stream
-from streams.stream_utils import calc_nowait_e2e_delay
+from stream import Stream
+from stream_utils import calc_nowait_e2e_delay
 from topology.topology import parse_topology
 
 ##############
@@ -26,7 +29,8 @@ args = parser.parse_args()
 
 # read config file
 config = configparser.ConfigParser()
-print(os.path.isfile(args.ini))
+if not os.path.isfile(args.ini):
+    raise FileNotFoundError
 config.read(args.ini)
 
 number_of_streams: int = int(config['generic']['number_of_tt_streams'])
@@ -37,6 +41,8 @@ max_delay_percentages: List[float] = json.loads(config.get('generic', 'max_delay
 
 # read topology
 topology = parse_topology(args.topology)
+if not os.path.isfile(args.topology):
+    raise FileNotFoundError
 hosts: List[gt.Vertex] = [v for v in topology.vertices() if not topology.vp.is_switch[v]]
 
 

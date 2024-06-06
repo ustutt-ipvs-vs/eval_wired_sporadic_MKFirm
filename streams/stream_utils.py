@@ -2,7 +2,7 @@ from math import ceil
 
 import graph_tool.all as gt
 
-from streams.stream import Stream
+from stream import Stream
 
 
 # TODO: this might need an update to consider each node's fwd_header_b instead stream.size and header_size (Eike)

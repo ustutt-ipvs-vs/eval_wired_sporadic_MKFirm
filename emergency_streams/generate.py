@@ -18,6 +18,8 @@ args = parser.parse_args()
 ##########
 # topology
 ##########
+if not os.path.isfile(args.topology):
+    raise FileNotFoundError
 topology = network.network_graph.NetworkGraph(args.topology)
 device_ids: List[int] = topology.get_end_device_ids()
 
@@ -25,6 +27,8 @@ device_ids: List[int] = topology.get_end_device_ids()
 # config
 ########
 config = configparser.ConfigParser()
+if not os.path.isfile(args.ini):
+    raise FileNotFoundError
 config.read(args.ini)
 
 number_of_streams: int = int(config.get('generic', 'number_of_emergency_streams'))
