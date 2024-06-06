@@ -2,19 +2,43 @@
 
 import argparse
 import json
-# xml parser
-import xml.etree.ElementTree as ET
-# grouping the streams
 import random
+import configparser
+from typing import List
 
 import graph_tool.all as gt
 import networkx as nx
 import xml.dom.minidom
 
 from streams.stream import Stream
-from streams.stream_utils import calc_e2e_delay
+from streams.stream_utils import calc_nowait_e2e_delay
 from topology.topology import parse_topology
 from topology.topology_utils import get_header_size
+
+##############
+# data loading
+##############
+# program arguments
+parser = argparse.ArgumentParser()
+parser.add_argument('-t', '--topology', type=str, required=True, help='Path to topology file')
+parser.add_argument('-i', '--ini', type=str, required=True, help='Path to the ini file with the stream parameters')
+parser.add_argument('-o', '--output', help='Output file', default='./examples/streams.json')
+
+args = parser.parse_args()
+
+# read config file
+config = configparser.ConfigParser()
+config.read(args.ini)
+
+number_of_streams: int = int(config.get('generic', 'number_of_tt_streams'))
+periods_ns: List[int] = [period_us * 1000 for period_us in json.loads(config.get('generic', 'periods'))]
+min_frame_size_byte: int = int(config.get('generic', 'min_frame_size_byte'))
+max_frame_size_byte: int = int(config.get('generic', 'max_frame_size_byte'))
+max_delay_multiples: List[float] = json.loads(config.get('generic', 'max_delay_multiples'))
+
+# read topology
+topology = parse_topology(args.topology)
+hosts: List[gt.Vertex] = [v for v in topology.vertices() if not topology.vp.is_switch[v]]
 
 
 def find_route(src, dst, g):
@@ -23,97 +47,39 @@ def find_route(src, dst, g):
     return route[1:-1]
 
 
-def write_to_xml(input_xml, output_name):
-    with open(output_name + '_flow.xml', 'w') as output:
-        # prettify the output routing
-        pretty_xml = xml.dom.minidom.parseString(ET.tostring(input_xml)).toprettyxml()
-        output.write(pretty_xml)
+def generate_stream(stream_id):
+    stream = Stream(stream_id)
+    # todo consider enforcing a maximum frame size (i.e. MTU)
+    stream.frame_size_byte = max(64, random.randint(min_frame_size_byte, max_frame_size_byte))
+    stream.cycle_time = random.choice(periods_ns)
 
+    # Max delay must be smaller than the cycle time TODO is this still true?
+    while not stream or (stream.max_delay_ns < stream.cycle_time):
+        source_vertex = random.choice(hosts)
+        stream.source = topology.vp["v_id"][source_vertex]
+        target_vertex = random.choice([n for n in hosts if n != stream.source])
+        stream.target = topology.vp["v_id"][target_vertex]
 
-def generate_stream(stream_id, hosts, cycle_time_ns, calculate_route=False, topology=None, delay_alpha=None, pcp=7,
-                    size=None, stream_type='scheduled_cyclic_traffic', properties={}):
-    stream = None
-    if delay_alpha is None:
-        delay_alpha = 1.5  # default value
-    # Max delay must be smaller than the cycle time
-    while not stream or (not calculate_route and stream.max_delay < cycle_time_ns):
-        source = random.choice(hosts)
-        target = random.choice([n for n in hosts if n != source])
+        route = gt.shortest_path(topology, stream.source, stream.target)[1]
 
-        if size is None:
-            size = random.randint(16, 512) + get_header_size(udp_header=True, ipv4_header=True, ieee8021q_header=True,
-                                                             mac_header=True, ethernet_header=True)
+        if not route:
+            print(
+                f'Warning: For source {stream.source} -> {stream.target}, there is no route')
+            stream = None
 
-        stream = Stream(id=stream_id,
-                        source=source,
-                        target=target,
-                        cycle_time=cycle_time_ns,
-                        size=size,
-                        max_delay=cycle_time_ns,
-                        redundancy=1,
-                        route=[],
-                        pcp=pcp,
-                        type=stream_type,
-                        properties=properties)
-
-        if calculate_route:
-            stream.route = gt.shortest_path(topology, stream.source, stream.target)[1]
-            # Stream route as list of triples containing source, target, and key
-            # stream.route = [(edge.source(), edge.target(), topology.ep['e_id'][edge])
-            #                  for edge in gt.shortest_path(topology, stream.source, stream.target)[1]]
-
-            if not stream.route:
-                print(
-                    f'Warning: For source {topology.vp["v_id"][stream.source]} -> {topology.vp["v_id"][stream.target]}, there is no route')
-                stream = None
-                continue
-
-            stream.max_delay = calc_e2e_delay(topology, stream, delay_alpha, False, round=True)
+        delay_alpha = random.choice(max_delay_multiples)
+        stream.max_delay_ns = calc_nowait_e2e_delay(topology, stream, route, delay_alpha, round=True)
 
     return stream
 
 
-def generate_streams(streams_no, cycle_time_ns, topology_path=None, output=None, seed=None, seed_state=None,
-                     is_xml=False, topology=None, pcp=7, size=None, delay_alpha=None):
-    if not topology:
-        topology = parse_topology(topology_path)
-    hosts = [v for v in topology.vertices() if not topology.vp.is_switch[v]]
+#############
+# actual work
+#############
+streams = []
+for new_stream_id in range(number_of_streams):
+    temp_stream = generate_stream(new_stream_id)
+    streams.append(temp_stream)
 
-    if seed_state:
-        random.setstate(seed_state)
-    elif seed:
-        random.seed(seed)
-
-    streams = {}
-    while len(streams) < streams_no:
-
-        streams[len(streams)] = generate_stream(len(streams), hosts, cycle_time_ns, calculate_route=True,
-                                                topology=topology, pcp=pcp, size=size)
-
-    if is_xml:
-        is_xml = Stream.export_streams_to_xml(streams, topology)
-        write_to_xml(is_xml, output)
-
-    # print("Streams:", len(streams))
-
-    if output:
-        with open(output, 'w') as output:
-            output.write(Stream.export_streams_to_json(streams, topology))
-
-    return streams, random.getstate()
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--ns', type=int, help='Number of streams', default=50)
-    parser.add_argument('--cycle', type=int, help='Cycle time of hosts in ns', default=1000)
-    parser.add_argument('--topology', type=str, required=True, help='Path to topology file')
-    parser.add_argument('--framesize', type=str, default=None, help='Frame size (Default: random(64,300)')
-    parser.add_argument('--output', help='Output file', default='./examples/streams.json')
-    parser.add_argument('--x', help='Use if output format should be xml', action='store_true', default=False)
-
-    args = parser.parse_args()
-
-    generate_streams(args.ns, args.cycle, args.topology, args.output, args.x, size=args.framesize)
-
-    # main('test_topology.json', 100, 'test_s.xml', True)
+with open(args.output, 'w') as output:
+    json.dump(streams, output)
