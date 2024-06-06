@@ -687,8 +687,6 @@ def main(nodes=500, line=False, ring=False, mesh=False, star=False, dumbbell=Fal
     if DEBUG:
         debug_draw(G)
 
-    switches = list(filter(lambda node: G.nodes[node]['is_switch'] is True, G.nodes))
-
     assign_port_numbers(G)
 
     if not output_path:
