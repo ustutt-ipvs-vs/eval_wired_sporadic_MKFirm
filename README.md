@@ -3,6 +3,7 @@ For Linux / WSL.
 ```shell
 pip install networkx
 pip install pygraphviz
+pip install PyQt6
 sudo apt-get install graphviz graphviz-dev
 ```
 
