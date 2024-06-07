@@ -59,8 +59,13 @@ def create_random_emergency_stream(stream_id: int):
 
     route = network.Routing.get_dijkstra_shortest_path(source, target, topology)
 
-    return {'streamID': int(stream_id), 'source': int(source), 'target': int(target), 'rate_mbps': float(rate_mbps),
-            'bucket_size_byte': int(bucket_size_byte), 'route': network.Routing.route_to_json_ready(route)}
+    return {'streamID': int(stream_id),
+            'name': 'emergency_stream_{}'.format(stream_id),
+            'source': int(source),
+            'target': int(target),
+            'rate_mbps': float(rate_mbps),
+            'bucket_size_byte': int(bucket_size_byte),
+            'route': network.Routing.route_to_json_ready(route)}
 
 
 ################
