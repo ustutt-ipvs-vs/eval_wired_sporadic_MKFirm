@@ -35,12 +35,12 @@ config.read(args.ini)
 
 number_of_streams: int = int(config.get('generic', 'number_of_emergency_streams'))
 
-bucket_sizes_byte = np.arange(int(config.get('bucket size', 'min_buffer_size_byte')),
-                              int(config.get('bucket size', 'max_buffer_size_byte')),
-                              int(config.get('bucket size', 'step_buffer_size_byte')))
-refill_rate_mbps = np.arange(int(config.get('bucket refill rate', 'min_rate_mbps')),
-                             int(config.get('bucket refill rate', 'max_rate_mbps')),
-                             int(config.get('bucket refill rate', 'step_rate_mbps')))
+bucket_sizes_byte = np.arange(int(config.get('bucket size', 'min_bucket_size_byte')),
+                              int(config.get('bucket size', 'max_bucket_size_byte')),
+                              int(config.get('bucket size', 'step_bucket_size_byte')))
+refill_rate_mbps = np.arange(float(config.get('bucket refill rate', 'min_rate_mbps')),
+                             float(config.get('bucket refill rate', 'max_rate_mbps')),
+                             float(config.get('bucket refill rate', 'step_rate_mbps')))
 
 
 def get_random_source_and_target() -> (int, int):
