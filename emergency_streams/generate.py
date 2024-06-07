@@ -4,6 +4,7 @@ import random
 import configparser
 import os.path
 import numpy as np
+import decimal
 
 from typing import List
 
@@ -38,9 +39,10 @@ number_of_streams: int = int(config.get('generic', 'number_of_emergency_streams'
 bucket_sizes_byte = np.arange(int(config.get('bucket size', 'min_bucket_size_byte')),
                               int(config.get('bucket size', 'max_bucket_size_byte')),
                               int(config.get('bucket size', 'step_bucket_size_byte')))
-refill_rate_mbps = np.arange(float(config.get('bucket refill rate', 'min_rate_mbps')),
-                             float(config.get('bucket refill rate', 'max_rate_mbps')),
-                             float(config.get('bucket refill rate', 'step_rate_mbps')))
+min_rate_mbps = float(config.get('bucket refill rate', 'min_rate_mbps'))
+max_rate_mbps = float(config.get('bucket refill rate', 'max_rate_mbps'))
+step_rate_mbps = float(config.get('bucket refill rate', 'step_rate_mbps'))
+refill_rate_mbps = np.arange(min_rate_mbps, max_rate_mbps + step_rate_mbps, step_rate_mbps)
 
 
 def get_random_source_and_target() -> (int, int):
@@ -51,7 +53,8 @@ def get_random_source_and_target() -> (int, int):
 
 def create_random_emergency_stream(stream_id: int):
     source, target = get_random_source_and_target()
-    rate_mbps = random.choice(refill_rate_mbps)
+    rate_mbps = decimal.Decimal(random.choice(refill_rate_mbps))
+    rate_mbps = round(rate_mbps, 2)
     bucket_size_byte = random.choice(bucket_sizes_byte)
 
     route = network.Routing.get_dijkstra_shortest_path(source, target, topology)
