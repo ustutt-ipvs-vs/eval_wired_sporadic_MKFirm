@@ -13,7 +13,8 @@ import network.Routing
 parser = argparse.ArgumentParser()
 parser.add_argument('-t', '--topology', help='path to the topology file', type=str, required=True)
 parser.add_argument('-i', '--ini', help='path to the ini file with the stream parameters', type=str, required=True)
-parser.add_argument('-o', '--output', help='path to the output file', type=str, default='examples/emergency_streams.json')
+parser.add_argument('-o', '--output', help='path to the output file', type=str,
+                    default='examples/emergency_streams.json')
 
 args = parser.parse_args()
 ##########
@@ -34,12 +35,12 @@ config.read(args.ini)
 
 number_of_streams: int = int(config.get('generic', 'number_of_emergency_streams'))
 
-buffer_sizes = np.arange(int(config.get('buffer size', 'min_buffer_size')),
-                         int(config.get('buffer size', 'max_buffer_size')),
-                         int(config.get('buffer size', 'step_buffer_size')))
-data_rate = np.arange(int(config.get('rate', 'min_rate')),
-                      int(config.get('rate', 'max_rate')),
-                      int(config.get('rate', 'step_rate')))
+bucket_sizes_byte = np.arange(int(config.get('bucket size', 'min_buffer_size_byte')),
+                              int(config.get('bucket size', 'max_buffer_size_byte')),
+                              int(config.get('bucket size', 'step_buffer_size_byte')))
+refill_rate_mbps = np.arange(int(config.get('bucket refill rate', 'min_rate_mbps')),
+                             int(config.get('bucket refill rate', 'max_rate_mbps')),
+                             int(config.get('bucket refill rate', 'step_rate_mbps')))
 
 
 def get_random_source_and_target() -> (int, int):
@@ -50,13 +51,13 @@ def get_random_source_and_target() -> (int, int):
 
 def create_random_emergency_stream(stream_id: int):
     source, target = get_random_source_and_target()
-    rate = random.choice(data_rate)
-    buffer_size = random.choice(buffer_sizes)
+    rate_mbps = random.choice(refill_rate_mbps)
+    bucket_size_byte = random.choice(bucket_sizes_byte)
 
     route = network.Routing.get_dijkstra_shortest_path(source, target, topology)
 
-    return {'streamID': int(stream_id), 'source': int(source), 'target': int(target), 'data_rate': int(rate),
-            'buffer_size': int(buffer_size), 'route': network.Routing.route_to_json_ready(route)}
+    return {'streamID': int(stream_id), 'source': int(source), 'target': int(target), 'rate_mbps': float(rate_mbps),
+            'bucket_size_byte': int(bucket_size_byte), 'route': network.Routing.route_to_json_ready(route)}
 
 
 ################
