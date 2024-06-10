@@ -524,11 +524,12 @@ def prepare_vertices_for_json_export(G, processing_delay_ns):
 
 
 def create_dict_entry_for_vertex(G, vertex, processing_delay_ns):
+    is_switch: bool = ('is_switch' in G.nodes[vertex] and G.nodes[vertex]['is_switch'])
     entry = {
         'id': int(vertex),
         'name': 'n{}'.format(int(vertex)),
-        'processing_delay_ns': processing_delay_ns,
-        'is_switch': ('is_switch' in G.nodes[vertex] and G.nodes[vertex]['is_switch']),
+        'processing_delay_ns': processing_delay_ns if is_switch else 0,
+        'is_switch': is_switch,
         'queues_per_port': 8,
     }
     return entry
@@ -542,7 +543,7 @@ def prepare_edges_for_json_export(G, propagation_delay_ns):
         link_speed_mbps = 1000
         edges['_'.join([str(v0), str(v1)])] = {
             'id': len(edges),
-            'name': '{}-{}'.format(v0,v1),
+            'name': '{}-{}'.format(v0, v1),
             'source': v0,
             'target': v1,
             'link_speed_mbps': link_speed_mbps,
@@ -550,7 +551,7 @@ def prepare_edges_for_json_export(G, propagation_delay_ns):
         }
         edges['_'.join([str(v1), str(v0)])] = {
             'id': len(edges),
-            'name': '{}-{}'.format(v1,v0),
+            'name': '{}-{}'.format(v1, v0),
             'source': v1,
             'target': v0,
             'link_speed_mbps': link_speed_mbps,
