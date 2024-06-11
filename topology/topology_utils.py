@@ -4,13 +4,13 @@ import string
 MBITS_TO_NSBYTE = (1e6) / 8 / 1e9
 
 
-def calc_propagation_delay(cable_length: int):
+def calc_propagation_delay(cable_length: int) -> float:
     # Propagation speed: 2/3 * speed_of_light [m/s]
     # [m/s] -> [m/ns] * 1e9
     return ((2 / 3) * (2.99792 * 1e8)) / 1e9 * cable_length
 
 
-def calc_cable_length(propagation_delay_ns: int):
+def calc_cable_length(propagation_delay_ns: int) -> int:
     # According to INET specification:
     # propagation_delay_seconds = length / 2e8
     return propagation_delay_ns * 2e8 * 1e-9
