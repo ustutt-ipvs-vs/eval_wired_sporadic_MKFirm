@@ -531,6 +531,7 @@ def create_dict_entry_for_vertex(G, vertex, processing_delay_ns):
         'processing_delay_ns': processing_delay_ns if is_switch else 0,
         'is_switch': is_switch,
         'queues_per_port': 8,
+        'position': G.nodes[vertex]['_ipvs_position']
     }
     return entry
 
