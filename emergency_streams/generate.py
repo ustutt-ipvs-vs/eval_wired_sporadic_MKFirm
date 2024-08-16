@@ -41,6 +41,8 @@ bucket_sizes_byte = np.arange(int(config.get('bucket size', 'min_bucket_size_byt
                               int(config.get('bucket size', 'step_bucket_size_byte')))
 min_rate_mbps = float(config.get('bucket refill rate', 'min_rate_mbps'))
 max_rate_mbps = float(config.get('bucket refill rate', 'max_rate_mbps'))
+min_frame_size_byte: int = int(config.get('generic', 'min_frame_size_byte'))
+max_frame_size_byte: int = int(config.get('generic', 'max_frame_size_byte'))
 step_rate_mbps = float(config.get('bucket refill rate', 'step_rate_mbps'))
 refill_rate_mbps = np.arange(min_rate_mbps, max_rate_mbps + step_rate_mbps, step_rate_mbps)
 
@@ -65,6 +67,7 @@ def create_random_emergency_stream(stream_id: int):
             'target': int(target),
             'rate_mbps': float(rate_mbps),
             'bucket_size_byte': int(bucket_size_byte),
+            'frame_size_byte': max(64, random.randint(min_frame_size_byte, max_frame_size_byte)),
             'route': network.Routing.route_to_json_ready(route)}
 
 

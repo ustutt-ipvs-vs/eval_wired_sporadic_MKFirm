@@ -541,7 +541,7 @@ def prepare_edges_for_json_export(G, propagation_delay_ns):
     for v0, v1 in G.edges():
         # Set link speed depending on the type of the link
 
-        link_speed_mbps = 1000
+        link_speed_mbps = 100
         edges['_'.join([str(v0), str(v1)])] = {
             'id': len(edges),
             'name': '{}-{}'.format(v0, v1),

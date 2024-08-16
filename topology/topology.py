@@ -68,6 +68,7 @@ def parse_topology(topology_path):
             processing_delay[v] = vertex['processing_delay_ns']
             is_switch[v] = vertex['is_switch']
             queues_per_port[v] = vertex['queues_per_port']
+            position[v] = vertex['position']
 
     return topology
 
