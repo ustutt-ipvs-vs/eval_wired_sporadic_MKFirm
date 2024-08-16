@@ -333,7 +333,8 @@ def calc_production_intervals(emergency_streams):
         prime = next(prime_generator)
         # The median of the sin function is 0, so we can shift it up depending on frame size to get the desired bitrate:
         bitrate = stream["rate_mbps"]
-        frame_size = stream["frame_size_byte"] - 58 # 58B = 4B (VLAN Tag) + 8B (UDP) + 20B (IP) + 14B (ETH MAC) + 4B (ETH FCS) + 8B (ETH PHY)
+        # Do not subtract the -58B overhead, because we want to calculate the datarate on wire not on the payload
+        frame_size = stream["frame_size_byte"] # +58B = 4B (VLAN Tag) + 8B (UDP) + 20B (IP) + 14B (ETH MAC) + 4B (ETH FCS) + 8B (ETH PHY)
 
         frames_per_ms = bitrate * 1e3 / (frame_size * 8)
 
