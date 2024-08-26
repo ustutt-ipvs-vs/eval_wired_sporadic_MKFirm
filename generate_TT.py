@@ -6,15 +6,10 @@ import random
 import configparser
 import os.path
 from typing import List
-import sys
 
 from streams.tt_stream import TtStream
-from stream_utils import calc_nowait_e2e_delay
-
-# setting path for the network module in emergency_streams
-sys.path.append('../emergency_streams/network')
-from emergency_streams.network.Routing import get_dijkstra_shortest_path
-from emergency_streams.network.network_graph import NetworkGraph
+from network.Routing import calc_nowait_e2e_delay, get_dijkstra_shortest_path
+from network.network_graph import NetworkGraph
 
 ##############
 # data loading

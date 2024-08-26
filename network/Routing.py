@@ -1,9 +1,11 @@
 import sys
+from math import ceil
 from queue import PriorityQueue
 from typing import Dict, List, Set
 
-from emergency_streams.network.network_graph import NetworkGraph
-from emergency_streams.network.network_elements import EgressPort
+from network.network_graph import NetworkGraph
+from network.network_elements import EgressPort
+from streams.tt_stream import TtStream
 
 
 def calculate_hop_delay_in_ns(network: NetworkGraph, egress_port: EgressPort, frame_size: int) -> int:
@@ -77,3 +79,18 @@ def route_to_json_ready(route: List[EgressPort]):
                        'from': int(egress_port.host_node),
                        'to': int(egress_port.destination_node)})
     return output
+
+
+def calc_nowait_e2e_delay(topology: NetworkGraph, stream: TtStream, route, round=False) -> int:
+    """
+    Calculates the e2e delay for a stream.
+    """
+    time = 0
+    link: EgressPort
+    for link in route:
+        time += calculate_hop_delay_in_ns(topology, link, stream.frame_size_byte)
+
+    if round:
+        return int(ceil(time / 1000) * 1000)
+    else:
+        return int(time)

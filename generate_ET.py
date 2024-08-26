@@ -8,8 +8,8 @@ import numpy as np
 from typing import List
 
 import streams.tt_stream
-from emergency_streams.et_stream import EtStream, from_tt_stream
-from emergency_streams.network import network_graph
+from streams.et_stream import EtStream, from_tt_stream
+from network import network_graph
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-t', '--topology', help='path to the topology file', type=str, required=True)

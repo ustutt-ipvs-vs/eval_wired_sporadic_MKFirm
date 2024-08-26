@@ -1,6 +1,6 @@
 import json
 from typing import Dict
-from emergency_streams.network.network_elements import NetworkNode, EgressPort
+from network.network_elements import NetworkNode, EgressPort
 
 
 class NetworkGraph:
@@ -39,4 +39,3 @@ class NetworkGraph:
 
     def get_node(self, node_id: int) -> NetworkNode:
         return self.nodes[node_id]
-

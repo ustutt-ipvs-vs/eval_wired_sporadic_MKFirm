@@ -22,21 +22,21 @@ python3 topology/generate.py --help
 # Generate TT-Streams
 Example command:
 ```shell
-python3 streams/generate.py -t examples/topology.json -i dummy_data/time-triggered_traffic.ini
+python3 generate_TT.py -t examples/topology.json -i dummy_data/time-triggered_traffic.ini
 ```
 
 For more parameters execute
 ```shell
-python3 streams/generate.py --help
+python3 generate_TT.py --help
 ```
 
 # Generate ET-Streams
 Example command:
 ```shell
-python3 emergency_streams/generate.py -t examples/topology.json -i dummy_data/emergency_traffic.ini -s examples/streams.json
+python3 generate_ET.py -t examples/topology.json -i dummy_data/emergency_traffic.ini -s examples/streams.json
 ```
 
 For more parameters execute
 ```shell
-python3 emergency_streams/generate.py --help
+python3 generate_ET.py --help
 ```
