@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Stream:
+class TtStream:
     id: int
     name: str
     source: int
@@ -27,8 +27,8 @@ class Stream:
                 "et_capable": self.et_capable}
 
 
-def from_json(json_object) -> Stream:
-    stream = Stream(json_object['id'])
+def from_json(json_object) -> TtStream:
+    stream = TtStream(json_object['id'])
     stream.source = json_object['source']
     stream.target = json_object['target']
     stream.frame_size_byte = json_object['frame_size_byte']

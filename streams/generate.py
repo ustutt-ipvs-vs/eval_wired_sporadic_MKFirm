@@ -8,7 +8,7 @@ import os.path
 from typing import List
 import sys
 
-from streams.stream import Stream
+from streams.tt_stream import TtStream
 from stream_utils import calc_nowait_e2e_delay
 
 # setting path for the network module in emergency_streams
@@ -49,7 +49,7 @@ hosts: List[int] = topology.get_end_device_ids()
 
 
 def generate_stream(stream_id):
-    stream = Stream(stream_id)
+    stream = TtStream(stream_id)
     # todo consider enforcing a maximum frame size (i.e. MTU)
     stream.frame_size_byte = max(64, random.choice(frame_sizes_in_byte))
     stream.cycle_time_ns = random.choice(periods_ns)

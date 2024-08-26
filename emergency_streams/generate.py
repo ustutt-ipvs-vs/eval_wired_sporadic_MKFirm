@@ -7,7 +7,7 @@ import numpy as np
 
 from typing import List
 
-import streams.stream
+import streams.tt_stream
 from emergency_streams.et_stream import EtStream, from_tt_stream
 from emergency_streams.network import network_graph
 
@@ -74,7 +74,7 @@ def create_emergency_streams_based_on_tt_streams():
     et_streams: List[EtStream] = []
 
     with open(args.tt_streams, 'r') as tt_stream_file:
-        tt_streams = [streams.stream.from_json(s) for s in json.load(tt_stream_file) if s['et_capable']]
+        tt_streams = [streams.tt_stream.from_json(s) for s in json.load(tt_stream_file) if s['et_capable']]
 
     if len(tt_streams) < number_of_streams:
         raise ValueError('Not enough TT streams available to create the requested number of emergency streams.')

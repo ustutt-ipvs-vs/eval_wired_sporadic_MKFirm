@@ -4,11 +4,11 @@ from emergency_streams.network.Routing import calculate_hop_delay_in_ns
 from emergency_streams.network.network_elements import EgressPort
 
 from emergency_streams.network.network_graph import NetworkGraph
-from stream import Stream
+from tt_stream import TtStream
 
 
 # TODO: this might need an update to consider each node's fwd_header_b instead stream.size and header_size (Eike)
-def calc_nowait_e2e_delay(topology: NetworkGraph, stream: Stream, route, round=False) -> int:
+def calc_nowait_e2e_delay(topology: NetworkGraph, stream: TtStream, route, round=False) -> int:
     """
     Calculates the e2e delay for a stream.
     """

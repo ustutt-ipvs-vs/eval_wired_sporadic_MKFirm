@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-import streams.stream
+import streams.tt_stream
 from network import Routing
 from network.network_graph import NetworkGraph
 from network.network_elements import EgressPort
@@ -27,7 +27,7 @@ class EtStream:
         self.tt_stream_id = -1
 
     def to_json(self):
-        return {'streamID': int(self.stream_id),
+        return {'id': int(self.stream_id),
                 'ttStreamID': int(self.tt_stream_id),
                 'name': 'emergency_stream_{}'.format(self.stream_id),
                 'source': int(self.source),
@@ -53,7 +53,7 @@ class EtStream:
         self.route = Routing.get_dijkstra_shortest_path(self.source, self.target, topology)
 
 
-def from_tt_stream(tt_stream: streams.stream.Stream, stream_id: int, topology: NetworkGraph) -> EtStream:
+def from_tt_stream(tt_stream: streams.tt_stream.TtStream, stream_id: int, topology: NetworkGraph) -> EtStream:
     et_stream = EtStream(stream_id)
     et_stream.tt_stream_id = tt_stream.id
 
