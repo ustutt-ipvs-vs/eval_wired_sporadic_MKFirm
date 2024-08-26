@@ -6,7 +6,8 @@
         "target": 1,
         "frame_size_byte": 341,
         "cycle_time_ns": 200000,
-        "deadline_ns": 106000
+        "deadline_ns": 106000,
+        "et_capable": true
     },
     {
         "id": 1,
@@ -15,7 +16,8 @@
         "target": 4,
         "frame_size_byte": 363,
         "cycle_time_ns": 400000,
-        "deadline_ns": 400000
+        "deadline_ns": 400000,
+        "et_capable": true
     },
     {
         "id": 2,
@@ -24,7 +26,8 @@
         "target": 5,
         "frame_size_byte": 342,
         "cycle_time_ns": 400000,
-        "deadline_ns": 206000
+        "deadline_ns": 206000,
+        "et_capable": true
     },
     {
         "id": 3,
@@ -33,7 +36,8 @@
         "target": 1,
         "frame_size_byte": 1201,
         "cycle_time_ns": 400000,
-        "deadline_ns": 213000
+        "deadline_ns": 213000,
+        "et_capable": true
     },
     {
         "id": 4,
@@ -42,7 +46,8 @@
         "target": 2,
         "frame_size_byte": 75,
         "cycle_time_ns": 400000,
-        "deadline_ns": 204000
+        "deadline_ns": 204000,
+        "et_capable": true
     },
     {
         "id": 5,
@@ -51,7 +56,8 @@
         "target": 4,
         "frame_size_byte": 786,
         "cycle_time_ns": 400000,
-        "deadline_ns": 209500
+        "deadline_ns": 209500,
+        "et_capable": true
     },
     {
         "id": 6,
@@ -60,7 +66,8 @@
         "target": 5,
         "frame_size_byte": 894,
         "cycle_time_ns": 400000,
-        "deadline_ns": 400000
+        "deadline_ns": 400000,
+        "et_capable": true
     },
     {
         "id": 7,
@@ -69,7 +76,8 @@
         "target": 5,
         "frame_size_byte": 483,
         "cycle_time_ns": 100000,
-        "deadline_ns": 100000
+        "deadline_ns": 100000,
+        "et_capable": true
     },
     {
         "id": 8,
@@ -78,7 +86,8 @@
         "target": 4,
         "frame_size_byte": 1170,
         "cycle_time_ns": 300000,
-        "deadline_ns": 163000
+        "deadline_ns": 163000,
+        "et_capable": true
     },
     {
         "id": 9,
@@ -87,6 +96,7 @@
         "target": 1,
         "frame_size_byte": 1233,
         "cycle_time_ns": 300000,
-        "deadline_ns": 231750
+        "deadline_ns": 231750,
+        "et_capable": true
     }
 ]

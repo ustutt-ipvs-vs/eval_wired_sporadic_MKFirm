@@ -4,15 +4,19 @@ import random
 import configparser
 import os.path
 import numpy as np
-import decimal
 
 from typing import List
 
 import network.network_graph
 import network.Routing
+import streams.stream
+from emergency_streams.et_stream import EtStream, from_tt_stream
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-t', '--topology', help='path to the topology file', type=str, required=True)
+parser.add_argument('-s', '--tt_streams',
+                    help='path to the tt streams file. If set, the TT streams will be used as template (if they have the proper flag set). Otherwise ET streams are created randomly.',
+                    type=str, required=False)
 parser.add_argument('-i', '--ini', help='path to the ini file with the stream parameters', type=str, required=True)
 parser.add_argument('-o', '--output', help='path to the output file', type=str,
                     default='examples/emergency_streams.json')
@@ -36,13 +40,15 @@ config.read(args.ini)
 
 number_of_streams: int = int(config.get('generic', 'number_of_emergency_streams'))
 
-bucket_sizes_byte = np.arange(int(config.get('bucket size', 'min_bucket_size_byte')),
-                              int(config.get('bucket size', 'max_bucket_size_byte')),
-                              int(config.get('bucket size', 'step_bucket_size_byte')))
-min_rate_mbps = float(config.get('bucket refill rate', 'min_rate_mbps'))
-max_rate_mbps = float(config.get('bucket refill rate', 'max_rate_mbps'))
-step_rate_mbps = float(config.get('bucket refill rate', 'step_rate_mbps'))
-refill_rate_mbps = np.arange(min_rate_mbps, max_rate_mbps + step_rate_mbps, step_rate_mbps)
+random_et_streams: bool = args.tt_streams is None
+if random_et_streams:
+    min_bucket_size_byte = int(config.get('random ET values', 'min_bucket_size_byte'))
+    max_bucket_size_byte = int(config.get('random ET values', 'max_bucket_size_byte'))
+    step_bucket_size_byte = int(config.get('random ET values', 'step_bucket_size_byte'))
+    bucket_sizes_byte = np.arange(min_bucket_size_byte, max_bucket_size_byte, step_bucket_size_byte)
+
+    frame_sizes_byte: List[int] = json.loads(config.get('random ET values', 'frame_sizes_in_byte'))
+    survival_times_us: List[int] = json.loads(config.get('random ET values', 'survival_times_us'))
 
 
 def get_random_source_and_target() -> (int, int):
@@ -52,28 +58,46 @@ def get_random_source_and_target() -> (int, int):
 
 
 def create_random_emergency_stream(stream_id: int):
+    assert random_et_streams
+    et_stream = EtStream(stream_id)
+
+    frame_size = random.choice(frame_sizes_byte)
+    survival_time_ns = random.choice(survival_times_us) * 1000
+    et_stream.set_and_calculate_bucket_attributes(frame_size, survival_time_ns)
+
     source, target = get_random_source_and_target()
-    rate_mbps = decimal.Decimal(random.choice(refill_rate_mbps))
-    rate_mbps = round(rate_mbps, 2)
-    bucket_size_byte = random.choice(bucket_sizes_byte)
+    et_stream.set_and_calculate_route(source, target, topology)
 
-    route = network.Routing.get_dijkstra_shortest_path(source, target, topology)
+    return et_stream.to_json()
 
-    return {'streamID': int(stream_id),
-            'name': 'emergency_stream_{}'.format(stream_id),
-            'source': int(source),
-            'target': int(target),
-            'rate_mbps': float(rate_mbps),
-            'bucket_size_byte': int(bucket_size_byte),
-            'route': network.Routing.route_to_json_ready(route)}
+
+def create_emergency_streams_based_on_tt_streams():
+    et_streams: List[EtStream] = []
+
+    with open(args.tt_streams, 'r') as tt_stream_file:
+        tt_streams = [streams.stream.from_json(s) for s in json.load(tt_stream_file) if s['et_capable']]
+
+    if len(tt_streams) < number_of_streams:
+        raise ValueError('Not enough TT streams available to create the requested number of emergency streams.')
+    for stream_id in range(0, number_of_streams):
+        tt_stream = random.choice(tt_streams)
+        tt_streams.remove(tt_stream)
+
+        et_stream = from_tt_stream(tt_stream, stream_id, topology)
+        et_streams.append(et_stream)
+
+    return [et.to_json() for et in et_streams]
 
 
 ################
 # create streams
 ################
 emergency_streams = []
-for i in range(0, number_of_streams):
-    emergency_streams.append(create_random_emergency_stream(i))
+if random_et_streams:
+    for i in range(0, number_of_streams):
+        emergency_streams.append(create_random_emergency_stream(i))
+else:
+    emergency_streams = create_emergency_streams_based_on_tt_streams()
 
 with open(args.output, 'w') as output_file:
     output_file.write(json.dumps(emergency_streams, indent=4))

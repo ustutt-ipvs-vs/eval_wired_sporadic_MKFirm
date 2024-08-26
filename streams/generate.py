@@ -35,9 +35,11 @@ config.read(args.ini)
 
 number_of_streams: int = int(config.get('generic', 'number_of_tt_streams'))
 periods_ns: List[int] = [period_us * 1000 for period_us in json.loads(config.get('generic', 'periods_in_us'))]
-min_frame_size_byte: int = int(config.get('generic', 'min_frame_size_byte'))
-max_frame_size_byte: int = int(config.get('generic', 'max_frame_size_byte'))
+frame_sizes_in_byte: List[int] = json.loads(config.get('generic', 'frame_sizes_in_byte'))
 max_delay_percentages: List[float] = json.loads(config.get('generic', 'max_delay_percentage'))
+
+et_capable_portion: float = float(config.get('generic', 'et_capable_portion'))
+first_stream_id: int = int(config.get('generic', 'first_stream_id'))
 
 # read topology
 if not os.path.isfile(args.topology):
@@ -49,7 +51,7 @@ hosts: List[gt.Vertex] = [v for v in topology.vertices() if not topology.vp.is_s
 def generate_stream(stream_id):
     stream = Stream(stream_id)
     # todo consider enforcing a maximum frame size (i.e. MTU)
-    stream.frame_size_byte = max(64, random.randint(min_frame_size_byte, max_frame_size_byte))
+    stream.frame_size_byte = max(64, random.choice(frame_sizes_in_byte))
     stream.cycle_time_ns = random.choice(periods_ns)
 
     source_vertex = random.choice(hosts)
@@ -82,8 +84,8 @@ def generate_stream(stream_id):
 # actual work
 #############
 streams = []
-for new_stream_id in range(number_of_streams):
+for new_stream_id in range(first_stream_id, first_stream_id + number_of_streams):
     streams.append(generate_stream(new_stream_id))
 
 with open(args.output, 'w') as output:
-    json.dump([s.toJSON() for s in streams], output, indent=4)
+    json.dump([s.to_json() for s in streams], output, indent=4)

@@ -1,13 +1,13 @@
 from dataclasses import dataclass
-from typing import List, overload
+from typing import List
 
 
 @dataclass
 class EgressPort:
     id: int
     name: str
-    host_node: str
-    destination_node: str
+    host_node: int
+    destination_node: int
 
     # link properties
     link_speed_mbps: int
@@ -19,8 +19,8 @@ class EgressPort:
         if json_link is not None:
             self.id = int(json_link['id'])
             self.name = json_link['name']
-            self.host_node = json_link['source']
-            self.destination_node = json_link['target']
+            self.host_node = int(json_link['source'])
+            self.destination_node = int(json_link['target'])
             self.link_speed_mbps = int(json_link['link_speed_mbps'])
             self.propagation_delay_ns = int(json_link['propagation_delay_ns'])
 
