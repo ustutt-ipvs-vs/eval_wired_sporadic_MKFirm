@@ -7,10 +7,9 @@ import numpy as np
 
 from typing import List
 
-import network.network_graph
-import network.Routing
 import streams.stream
 from emergency_streams.et_stream import EtStream, from_tt_stream
+from emergency_streams.network import network_graph
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-t', '--topology', help='path to the topology file', type=str, required=True)
@@ -27,7 +26,7 @@ args = parser.parse_args()
 ##########
 if not os.path.isfile(args.topology):
     raise FileNotFoundError
-topology = network.network_graph.NetworkGraph(args.topology)
+topology = network_graph.NetworkGraph(args.topology)
 device_ids: List[int] = topology.get_end_device_ids()
 
 ########

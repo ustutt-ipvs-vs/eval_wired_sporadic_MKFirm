@@ -1,8 +1,9 @@
 import sys
 from queue import PriorityQueue
 from typing import Dict, List, Set
-from network.network_graph import NetworkGraph
-from network.network_elements import EgressPort
+
+from emergency_streams.network.network_graph import NetworkGraph
+from emergency_streams.network.network_elements import EgressPort
 
 
 def calculate_hop_delay_in_ns(network: NetworkGraph, egress_port: EgressPort, frame_size: int) -> int:

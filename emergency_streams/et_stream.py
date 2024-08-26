@@ -2,9 +2,9 @@ from dataclasses import dataclass
 from typing import List
 
 import streams.stream
-from emergency_streams.network import Routing
-from emergency_streams.network.network_graph import NetworkGraph
-from emergency_streams.network.network_elements import EgressPort
+from network import Routing
+from network.network_graph import NetworkGraph
+from network.network_elements import EgressPort
 
 
 @dataclass

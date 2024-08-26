@@ -34,7 +34,7 @@ class EgressPort:
 
 
 class NetworkNode:
-    id: str
+    id: int
     processing_delay_ns: int
     queues_per_port: int
     is_switch: bool

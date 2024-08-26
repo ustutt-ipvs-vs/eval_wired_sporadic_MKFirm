@@ -7,14 +7,14 @@ import configparser
 import os.path
 from typing import List
 import sys
-# setting path for import topology
-sys.path.append('../scenario_generator')
 
-import graph_tool.all as gt
-
-from stream import Stream
+from streams.stream import Stream
 from stream_utils import calc_nowait_e2e_delay
-from topology.topology import parse_topology
+
+# setting path for the network module in emergency_streams
+sys.path.append('../emergency_streams/network')
+from emergency_streams.network.Routing import get_dijkstra_shortest_path
+from emergency_streams.network.network_graph import NetworkGraph
 
 ##############
 # data loading
@@ -23,7 +23,7 @@ from topology.topology import parse_topology
 parser = argparse.ArgumentParser()
 parser.add_argument('-t', '--topology', type=str, required=True, help='Path to topology file')
 parser.add_argument('-i', '--ini', type=str, required=True, help='Path to the ini file with the stream parameters')
-parser.add_argument('-o', '--output', help='Output file', default='./examples/streams.json')
+parser.add_argument('-o', '--output', help='Output file', default='../examples/streams.json')
 
 args = parser.parse_args()
 
@@ -44,8 +44,8 @@ first_stream_id: int = int(config.get('generic', 'first_stream_id'))
 # read topology
 if not os.path.isfile(args.topology):
     raise FileNotFoundError
-topology = parse_topology(args.topology)
-hosts: List[gt.Vertex] = [v for v in topology.vertices() if not topology.vp.is_switch[v]]
+topology = NetworkGraph(args.topology)
+hosts: List[int] = topology.get_end_device_ids()
 
 
 def generate_stream(stream_id):
@@ -54,12 +54,12 @@ def generate_stream(stream_id):
     stream.frame_size_byte = max(64, random.choice(frame_sizes_in_byte))
     stream.cycle_time_ns = random.choice(periods_ns)
 
-    source_vertex = random.choice(hosts)
-    stream.source = int(topology.vp["v_id"][source_vertex])
-    target_vertex = random.choice([n for n in hosts if n != stream.source])
-    stream.target = int(topology.vp["v_id"][target_vertex])
+    stream.source = random.choice(hosts)
+    stream.target = random.choice([n for n in hosts if n != stream.source])
 
-    route = gt.shortest_path(topology, source_vertex, target_vertex)[1]
+    stream.et_capable = random.random() < et_capable_portion
+
+    route = get_dijkstra_shortest_path(stream.source, stream.target, topology)
     if not route:
         print(
             f'Warning: For source {stream.source} -> {stream.target}, there is no route')
