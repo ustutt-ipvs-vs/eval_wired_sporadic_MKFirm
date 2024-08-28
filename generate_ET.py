@@ -5,7 +5,7 @@ import configparser
 import os.path
 import numpy as np
 
-from typing import List
+from typing import List, Tuple
 
 import streams.tt_stream
 from streams.et_stream import EtStream, from_tt_stream
@@ -50,7 +50,7 @@ if random_et_streams:
     survival_times_us: List[int] = json.loads(config.get('random ET values', 'survival_times_us'))
 
 
-def get_random_source_and_target() -> (int, int):
+def get_random_source_and_target() -> Tuple[int, int]:
     source = random.choice(device_ids)
     target = random.choice([d_id for d_id in device_ids if d_id != source])
     return source, target

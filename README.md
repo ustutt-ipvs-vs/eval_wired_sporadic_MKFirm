@@ -11,12 +11,12 @@ sudo apt-get install graphviz graphviz-dev
 
 Example for a star topology:
 ```shell
-python3 topology/generate.py --star --nodes 20 
+python3 generate_Topology.py --star --nodes 20
 ```
 
 For more parameters and topology types execute
 ```shell
-python3 topology/generate.py --help
+python3 generate_Topology.py --help
 ```
 
 # Generate TT-Streams

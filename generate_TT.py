@@ -18,7 +18,7 @@ from network.network_graph import NetworkGraph
 parser = argparse.ArgumentParser()
 parser.add_argument('-t', '--topology', type=str, required=True, help='Path to topology file')
 parser.add_argument('-i', '--ini', type=str, required=True, help='Path to the ini file with the stream parameters')
-parser.add_argument('-o', '--output', help='Output file', default='../examples/streams.json')
+parser.add_argument('-o', '--output', help='Output file', default='examples/streams.json')
 
 args = parser.parse_args()
 
