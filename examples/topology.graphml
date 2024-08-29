@@ -95,145 +95,145 @@
 <edge source="0" target="1" id="0">
   <data key="d5">0</data>
   <data key="d6">0-1</data>
-  <data key="d7">1000</data>
+  <data key="d7">100</data>
   <data key="d8">200</data>
 </edge>
 <edge source="0" target="1" id="1">
   <data key="d5">1</data>
   <data key="d6">1-0</data>
-  <data key="d7">1000</data>
+  <data key="d7">100</data>
   <data key="d8">200</data>
 </edge>
 <edge source="0" target="5" id="0">
   <data key="d5">2</data>
   <data key="d6">0-5</data>
-  <data key="d7">1000</data>
+  <data key="d7">100</data>
   <data key="d8">200</data>
 </edge>
 <edge source="0" target="5" id="1">
   <data key="d5">3</data>
   <data key="d6">5-0</data>
-  <data key="d7">1000</data>
+  <data key="d7">100</data>
   <data key="d8">200</data>
 </edge>
 <edge source="0" target="6" id="0">
   <data key="d5">4</data>
   <data key="d6">0-6</data>
-  <data key="d7">1000</data>
+  <data key="d7">100</data>
   <data key="d8">200</data>
 </edge>
 <edge source="0" target="6" id="1">
   <data key="d5">5</data>
   <data key="d6">6-0</data>
-  <data key="d7">1000</data>
+  <data key="d7">100</data>
   <data key="d8">200</data>
 </edge>
 <edge source="1" target="2" id="0">
   <data key="d5">6</data>
   <data key="d6">1-2</data>
-  <data key="d7">1000</data>
+  <data key="d7">100</data>
   <data key="d8">200</data>
 </edge>
 <edge source="1" target="2" id="1">
   <data key="d5">7</data>
   <data key="d6">2-1</data>
-  <data key="d7">1000</data>
+  <data key="d7">100</data>
   <data key="d8">200</data>
 </edge>
 <edge source="1" target="7" id="0">
   <data key="d5">8</data>
   <data key="d6">1-7</data>
-  <data key="d7">1000</data>
+  <data key="d7">100</data>
   <data key="d8">200</data>
 </edge>
 <edge source="1" target="7" id="1">
   <data key="d5">9</data>
   <data key="d6">7-1</data>
-  <data key="d7">1000</data>
+  <data key="d7">100</data>
   <data key="d8">200</data>
 </edge>
 <edge source="2" target="3" id="0">
   <data key="d5">10</data>
   <data key="d6">2-3</data>
-  <data key="d7">1000</data>
+  <data key="d7">100</data>
   <data key="d8">200</data>
 </edge>
 <edge source="2" target="3" id="1">
   <data key="d5">11</data>
   <data key="d6">3-2</data>
-  <data key="d7">1000</data>
+  <data key="d7">100</data>
   <data key="d8">200</data>
 </edge>
 <edge source="2" target="8" id="0">
   <data key="d5">12</data>
   <data key="d6">2-8</data>
-  <data key="d7">1000</data>
+  <data key="d7">100</data>
   <data key="d8">200</data>
 </edge>
 <edge source="2" target="8" id="1">
   <data key="d5">13</data>
   <data key="d6">8-2</data>
-  <data key="d7">1000</data>
+  <data key="d7">100</data>
   <data key="d8">200</data>
 </edge>
 <edge source="3" target="4" id="0">
   <data key="d5">14</data>
   <data key="d6">3-4</data>
-  <data key="d7">1000</data>
+  <data key="d7">100</data>
   <data key="d8">200</data>
 </edge>
 <edge source="3" target="4" id="1">
   <data key="d5">15</data>
   <data key="d6">4-3</data>
-  <data key="d7">1000</data>
+  <data key="d7">100</data>
   <data key="d8">200</data>
 </edge>
 <edge source="3" target="9" id="0">
   <data key="d5">16</data>
   <data key="d6">3-9</data>
-  <data key="d7">1000</data>
+  <data key="d7">100</data>
   <data key="d8">200</data>
 </edge>
 <edge source="3" target="9" id="1">
   <data key="d5">17</data>
   <data key="d6">9-3</data>
-  <data key="d7">1000</data>
+  <data key="d7">100</data>
   <data key="d8">200</data>
 </edge>
 <edge source="4" target="5" id="0">
   <data key="d5">18</data>
   <data key="d6">4-5</data>
-  <data key="d7">1000</data>
+  <data key="d7">100</data>
   <data key="d8">200</data>
 </edge>
 <edge source="4" target="5" id="1">
   <data key="d5">19</data>
   <data key="d6">5-4</data>
-  <data key="d7">1000</data>
+  <data key="d7">100</data>
   <data key="d8">200</data>
 </edge>
 <edge source="4" target="10" id="0">
   <data key="d5">20</data>
   <data key="d6">4-10</data>
-  <data key="d7">1000</data>
+  <data key="d7">100</data>
   <data key="d8">200</data>
 </edge>
 <edge source="4" target="10" id="1">
   <data key="d5">21</data>
   <data key="d6">10-4</data>
-  <data key="d7">1000</data>
+  <data key="d7">100</data>
   <data key="d8">200</data>
 </edge>
 <edge source="5" target="11" id="0">
   <data key="d5">22</data>
   <data key="d6">5-11</data>
-  <data key="d7">1000</data>
+  <data key="d7">100</data>
   <data key="d8">200</data>
 </edge>
 <edge source="5" target="11" id="1">
   <data key="d5">23</data>
   <data key="d6">11-5</data>
-  <data key="d7">1000</data>
+  <data key="d7">100</data>
   <data key="d8">200</data>
 </edge>
 </graph></graphml>
