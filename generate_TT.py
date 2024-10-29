@@ -6,15 +6,10 @@ import random
 import configparser
 import os.path
 from typing import List
-import sys
-# setting path for import topology
-sys.path.append('../scenario_generator')
 
-import graph_tool.all as gt
-
-from stream import Stream
-from stream_utils import calc_nowait_e2e_delay
-from topology.topology import parse_topology
+from streams.tt_stream import TtStream
+from network.Routing import calc_nowait_e2e_delay, get_dijkstra_shortest_path
+from network.network_graph import NetworkGraph
 
 ##############
 # data loading
@@ -23,7 +18,7 @@ from topology.topology import parse_topology
 parser = argparse.ArgumentParser()
 parser.add_argument('-t', '--topology', type=str, required=True, help='Path to topology file')
 parser.add_argument('-i', '--ini', type=str, required=True, help='Path to the ini file with the stream parameters')
-parser.add_argument('-o', '--output', help='Output file', default='./examples/streams.json')
+parser.add_argument('-o', '--output', help='Output file', default='examples/streams.json')
 
 args = parser.parse_args()
 
@@ -35,29 +30,31 @@ config.read(args.ini)
 
 number_of_streams: int = int(config.get('generic', 'number_of_tt_streams'))
 periods_ns: List[int] = [period_us * 1000 for period_us in json.loads(config.get('generic', 'periods_in_us'))]
-min_frame_size_byte: int = int(config.get('generic', 'min_frame_size_byte'))
-max_frame_size_byte: int = int(config.get('generic', 'max_frame_size_byte'))
+frame_sizes_in_byte: List[int] = json.loads(config.get('generic', 'frame_sizes_in_byte'))
 max_delay_percentages: List[float] = json.loads(config.get('generic', 'max_delay_percentage'))
+
+et_capable_portion: float = float(config.get('generic', 'et_capable_portion'))
+first_stream_id: int = int(config.get('generic', 'first_stream_id'))
 
 # read topology
 if not os.path.isfile(args.topology):
     raise FileNotFoundError
-topology = parse_topology(args.topology)
-hosts: List[gt.Vertex] = [v for v in topology.vertices() if not topology.vp.is_switch[v]]
+topology = NetworkGraph(args.topology)
+hosts: List[int] = topology.get_end_device_ids()
 
 
 def generate_stream(stream_id):
-    stream = Stream(stream_id)
+    stream = TtStream(stream_id)
     # todo consider enforcing a maximum frame size (i.e. MTU)
-    stream.frame_size_byte = max(64, random.randint(min_frame_size_byte, max_frame_size_byte))
+    stream.frame_size_byte = max(64, random.choice(frame_sizes_in_byte))
     stream.cycle_time_ns = random.choice(periods_ns)
 
-    source_vertex = random.choice(hosts)
-    stream.source = int(topology.vp["v_id"][source_vertex])
-    target_vertex = random.choice([n for n in hosts if n != stream.source])
-    stream.target = int(topology.vp["v_id"][target_vertex])
+    stream.source = random.choice(hosts)
+    stream.target = random.choice([n for n in hosts if n != stream.source])
 
-    route = gt.shortest_path(topology, source_vertex, target_vertex)[1]
+    stream.et_capable = random.random() < et_capable_portion
+
+    route = get_dijkstra_shortest_path(stream.source, stream.target, topology)
     if not route:
         print(
             f'Warning: For source {stream.source} -> {stream.target}, there is no route')
@@ -82,8 +79,8 @@ def generate_stream(stream_id):
 # actual work
 #############
 streams = []
-for new_stream_id in range(number_of_streams):
+for new_stream_id in range(first_stream_id, first_stream_id + number_of_streams):
     streams.append(generate_stream(new_stream_id))
 
 with open(args.output, 'w') as output:
-    json.dump([s.toJSON() for s in streams], output, indent=4)
+    json.dump([s.to_json() for s in streams], output, indent=4)

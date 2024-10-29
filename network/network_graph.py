@@ -1,10 +1,10 @@
 import json
-from typing import List, Dict
+from typing import Dict
 from network.network_elements import NetworkNode, EgressPort
 
 
 class NetworkGraph:
-    nodes: Dict[str, NetworkNode]
+    nodes: Dict[int, NetworkNode]
     min_queues_available: int
 
     def __init__(self, network_file_path: str):
@@ -37,6 +37,5 @@ class NetworkGraph:
     def get_end_device_ids(self):
         return [d.id for d in self.nodes.values() if not d.is_switch]
 
-    def get_node(self, node_id: str) -> NetworkNode:
+    def get_node(self, node_id: int) -> NetworkNode:
         return self.nodes[node_id]
-

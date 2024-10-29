@@ -11,32 +11,32 @@ sudo apt-get install graphviz graphviz-dev
 
 Example for a star topology:
 ```shell
-python3 topology/generate.py --star --nodes 20 
+python3 generate_Topology.py --star --nodes 20
 ```
 
 For more parameters and topology types execute
 ```shell
-python3 topology/generate.py --help
+python3 generate_Topology.py --help
 ```
 
 # Generate TT-Streams
-Example command with 5 streams:
+Example command:
 ```shell
-python3 streams/generate.py -t examples/topology.json -i dummy_data/time-triggered_traffic.ini
+python3 generate_TT.py -t examples/topology.json -i dummy_data/time-triggered_traffic.ini
 ```
 
 For more parameters execute
 ```shell
-python3 streams/generate.py --help
+python3 generate_TT.py --help
 ```
 
 # Generate ET-Streams
-Example command with 5 streams:
+Example command:
 ```shell
-python3 emergency_streams/generate.py -t examples/topology.json -i dummy_data/emergency_traffic.ini
+python3 generate_ET.py -t examples/topology.json -i dummy_data/emergency_traffic.ini -s examples/streams.json
 ```
 
 For more parameters execute
 ```shell
-python3 emergency_streams/generate.py --help
+python3 generate_ET.py --help
 ```
