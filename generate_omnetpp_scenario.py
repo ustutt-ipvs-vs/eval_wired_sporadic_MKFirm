@@ -1,20 +1,21 @@
 import argparse
 import json
 import os.path
-from typing import Dict, List
+from typing import Dict
+
+from PIL.ImageChops import offset
 
 from streams.tt_stream import parse_streams, TtStream
 from topology.topology import parse_topology
 
-network_base = '''package ipvs.emergency.simulations;
-
+network_base = '''
 import inet.networks.base.TsnNetworkBase;
 import inet.node.contract.IEthernetNetworkNode;
 import inet.node.ethernet.EthernetLink;
 import inet.node.tsn.TsnDevice;
 import inet.node.tsn.TsnSwitch;
 
-network TsnLinearNetwork extends TsnNetworkBase
+network EmergencyNetwork extends TsnNetworkBase
 {{
     submodules:
 {submodules}
@@ -89,6 +90,7 @@ def generate_network(topology, output):
             "tgt": devices[tgt]["name"],
             "src_id": src,
             "tgt_id": tgt,
+            "propagation_delay": propagation_delay,
             "length": length,
             "datarate": datarate,
             "src_port": len(devices[src]["connections"]),
@@ -106,6 +108,7 @@ def generate_network(topology, output):
                 "tgt_id": connection["src_id"],
                 "length": length,
                 "datarate": datarate,
+                "propagation_delay": propagation_delay,
                 "src_port": connection["tgt_port"],
                 "tgt_port": connection["src_port"],
                 "done": False,
@@ -139,7 +142,8 @@ def generate_network(topology, output):
 
 
 ini_base = '''[General]
-network = "TsnLinearNetwork"
+network = "EmergencyNetwork"
+sim-time-limit = 10s
 
 **.hasEgressTrafficShaping = true
 
@@ -208,6 +212,7 @@ sink_app_base = '''
 gcl_base = '''
 *.{name}.eth[{port}].macLayer.queue.transmissionGate[{pcp}].offset = {offset}ns
 *.{name}.eth[{port}].macLayer.queue.transmissionGate[{pcp}].initiallyOpen = {initially_open}
+# {info}
 *.{name}.eth[{port}].macLayer.queue.transmissionGate[{pcp}].durations = [{durations}]
 '''
 
@@ -295,6 +300,7 @@ def generate_apps(devices, identifier_mapping, pcp_mappings, streams, topology):
             "index": len(tgt_device["apps"]),
             "ip": stream.properties["ip"],
         }
+        stream.properties["port"] = port
         devices[topology.vp.v_id[stream.target]]["apps"].append(sink_app)
         identifier_mapping.append(identifier_mapping_base.format(name=stream.name, port=port))
         pcp_mappings.append(pcp_mapping_base.format(name=stream.name, pcp=stream.properties["pcp"]))
@@ -388,22 +394,24 @@ def load_gcls(gcl_path, streams, devices):
                 highest_queue: {
                     "initially_open": True,
                     "offset": 0,
-                    "durations": []
+                    "durations": [],
+                    "info": "ET port, open all the time"
                 }
             }
             for pcp, gcl in port["gcl_per_pcp"].items():
-                calc_gcl(gcls[nid][port["target"]], gcl, pcp, port["gcl_cycle"], streams, nid)
+                calc_gcl(gcls[nid][port["target"]], gcl, pcp, port["gcl_cycle"], streams, nid, port["target"])
 
     return gcls
 
 
-def calc_gcl(port_gcls, gcl, pcp, cycle_time, streams, nid):
+def calc_gcl(port_gcls, gcl, pcp, cycle_time, streams, nid, tgt_id):
     durations = []
     port_gcls[pcp] = {
         "initially_open": False,
         "offset": 0,
-        "durations": durations
+        "durations": durations,
     }
+    info = []
     # What a beautiful for and if nesting
     last_open = 0
     last_close = 0
@@ -415,9 +423,19 @@ def calc_gcl(port_gcls, gcl, pcp, cycle_time, streams, nid):
                         if "offsets" not in stream.properties:
                             stream.properties["offsets"] = {}
                         stream.properties["offsets"][frame["frame_number"]] = gcl_entry["open_time_ns"]
+            elif tgt_id == stream.target:
+                for frame in gcl_entry["streams"]:
+                    if stream.id == frame["stream_id"]:
+                        if "arrivals" not in stream.properties:
+                            stream.properties["arrivals"] = {}
+                        stream.properties["arrivals"][frame["frame_number"]] = (gcl_entry["open_time_ns"], gcl_entry["close_time_ns"])
 
         tclose = gcl_entry["close_time_ns"]
         topen = gcl_entry["open_time_ns"]
+        name_build = []
+        for frame in gcl_entry["streams"]:
+            name_build.append(str(frame["stream_id"]) + "-" + str(frame["frame_number"]))
+        name = ", ".join(name_build)
         open_duration = tclose - topen
 
         if topen < last_open:
@@ -429,17 +447,21 @@ def calc_gcl(port_gcls, gcl, pcp, cycle_time, streams, nid):
                 # Initially open case
                 port_gcls[pcp]["initially_open"] = True
                 durations.append(open_duration)
+                info.append([name])
                 last_close = tclose
             elif tclose > last_close:
                 # Extend last open duration if close time is after last close
                 extend_by = tclose - last_close
                 durations[-1] += extend_by
+                info[-1].append(name)
                 last_close = tclose
             # In the case tclose <= last_close, we don't need to do anything
         else:
             # Need to add a close time in between
             durations.append(topen - last_close)
+            info.append(["close"])
             durations.append(open_duration)
+            info.append([name])
             last_close = tclose
 
         last_open = topen
@@ -451,13 +473,18 @@ def calc_gcl(port_gcls, gcl, pcp, cycle_time, streams, nid):
         # Last element in list is always the last open duration
         # Add close duration until the end of the cycle
         durations.append(cycle_time - durations_sum)
+        info.append(["close"])
         if len(durations) % 2 != 0:
             # Shift GCL (merge front and end) and calculate offset
             offset = durations.pop(0)
+            info_pop = info.pop(0)
             durations[-1] += offset
+            if info[-1][-1] != info_pop[-1]:
+                info[-1] += info_pop
             port_gcls[pcp]["offset"] = cycle_time - offset  # Offset is the start time within the cycle
             # Toggle initially open
             port_gcls[pcp]["initially_open"] = not port_gcls[pcp]["initially_open"]
+    port_gcls[pcp]["info"] = ", ".join([f"({', '.join(f for f in frame)})" for i, frame in enumerate(info)])
 
 
 def extend_streams_with_multicast(streams, emergency_streams):
@@ -493,6 +520,31 @@ def parse_emergency_streams(path):
         return json.load(emergency_stream_fd)
 
 
+def generate_stream_meta(topology, streams, devices, output):
+    stream_meta = {}
+    for sid, stream in streams.items():
+        stream_meta[sid] = {
+            "offsets": stream.properties["offsets"],
+            "port": stream.properties["port"],
+            "cycle_time": stream.cycle_time_ns,
+        }
+        expected_arrivals = {}
+        expected_latest_arrivals = {}
+        last_hop = stream.properties["route"][-1]
+        device = devices[last_hop["device"]]
+        drate = device["datarates"][last_hop["port"]]
+        prop_delay = device["connections"][str(stream.target)]["propagation_delay"]
+        trans_delay = stream.frame_size_byte * 8 / drate * 1e3
+        for frame_number, (open_time, close_time) in stream.properties["arrivals"].items():
+            expected_arrivals[frame_number] = open_time + prop_delay + trans_delay
+            expected_latest_arrivals[frame_number] = close_time
+        stream_meta[sid]["expected_arrivals"] = expected_arrivals
+        stream_meta[sid]["expected_latest_arrivals"] = expected_latest_arrivals
+
+    with open(os.path.join(output, "stream_meta.json"), "w") as f:
+        json.dump(stream_meta, f, indent=4)
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -514,5 +566,6 @@ if __name__ == "__main__":
     parse_transmission_output(args.transmission, devices, streams)
     add_route_to_emergency_streams(e_streams, devices)
     generate_omnetpp_ini(topology, streams, e_streams, devices, gcls, args.output)
+    generate_stream_meta(topology, streams, devices, args.output)
 
     print(topology, streams)
