@@ -537,7 +537,7 @@ def generate_stream_meta(topology, streams, devices, output):
         trans_delay = stream.frame_size_byte * 8 / drate * 1e3
         for frame_number, (open_time, close_time) in stream.properties["arrivals"].items():
             expected_arrivals[frame_number] = open_time + prop_delay + trans_delay
-            expected_latest_arrivals[frame_number] = close_time
+            expected_latest_arrivals[frame_number] = close_time + prop_delay
         stream_meta[sid]["expected_arrivals"] = expected_arrivals
         stream_meta[sid]["expected_latest_arrivals"] = expected_latest_arrivals
 
@@ -552,8 +552,8 @@ if __name__ == "__main__":
     parser.add_argument('--streams', '-s', help="Stream path", type=str, required=True)
     parser.add_argument('--emergency_streams', '-e', help="Emergency stream path", type=str, required=True)
     parser.add_argument('--transmission', '-m', help="Transmission path", type=str, required=False)
-    parser.add_argument("--gcl", "-g", help="Path to GCL output", type=str, required=False)
-    parser.add_argument("--output", "-o", help="Output path", type=str, required=False)
+    parser.add_argument("--gcl", "-g", help="Path to GCL output", type=str, required=True)
+    parser.add_argument("--output", "-o", help="Output path", type=str, required=True)
     args = parser.parse_args()
 
     topology = parse_topology(args.topology)

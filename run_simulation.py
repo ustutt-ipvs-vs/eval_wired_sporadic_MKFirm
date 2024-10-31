@@ -123,9 +123,10 @@ def check_arrival_delays(streams, streams_meta):
         delayed = 0
         too_late = 0
         for i in range(len(stream["delay"][0])):
+            frame = i % num_frames_per_cycle
             arrival_time = round(stream["delay"][0][i] * 1e9)
-            expected_arrival_time = round(stream_meta["expected_arrivals"][str(i % num_frames_per_cycle)] + i * stream_meta["cycle_time"])
-            latest_arrival_time = round(stream_meta["expected_latest_arrivals"][str(i % num_frames_per_cycle)] + i * stream_meta["cycle_time"])
+            expected_arrival_time = round(stream_meta["expected_arrivals"][str(frame)] + (i-frame) * stream_meta["cycle_time"])
+            latest_arrival_time = round(stream_meta["expected_latest_arrivals"][str(frame)] + (i-frame) * stream_meta["cycle_time"])
             if arrival_time > latest_arrival_time:
                 print(f"Arrival time too late for stream {stream_meta['id']}, frame {i}: Expected at most {latest_arrival_time}, got {arrival_time}")
                 too_late += 1
