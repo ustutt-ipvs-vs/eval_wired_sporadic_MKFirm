@@ -231,8 +231,6 @@ def add_mac_entries(devices, stream_properties):
         })
 
 
-
-
 def generate_omnetpp_ini(topology, streams: Dict[int, TtStream], emergency_streams, devices, gcls, output):
     identifier_mapping = []
     pcp_mappings = []
@@ -309,7 +307,6 @@ def generate_apps(devices, identifier_mapping, pcp_mappings, streams, topology):
         port += 1
 
 
-
 def generate_emergency_apps(devices, identifier_mapping, pcp_mappings, emergency_streams, topology):
     port = 10000
     for stream in emergency_streams:
@@ -329,7 +326,7 @@ def generate_emergency_apps(devices, identifier_mapping, pcp_mappings, emergency
             "index": len(device["apps"]),
             "exp_param": 10,
             "burst_duration": burst_duration,
-            "interevent_time": stream["min_inter_event_time_ns"] /1e6,
+            "interevent_time": stream["min_inter_event_time_ns"] / 1e6,
         }
         devices[topology.vp.v_id[stream["source"]]]["apps"].append(src_app)
 
@@ -349,22 +346,69 @@ def generate_emergency_apps(devices, identifier_mapping, pcp_mappings, emergency
         port += 1
 
 
-def parse_transmission_output(transmission_path, devices, streams):
+def parse_transmission_output(transmission_path, devices, streams, gclcalc, cycle_time=None):
     # Read json
     with open(transmission_path, "r") as f:
         transmission_array = json.load(f)
 
+    gcls_in = {}
+
     for transmission_stream in transmission_array:
         stream = streams[transmission_stream["stream_id"]]
-        stream.properties["pcp"] = transmission_stream["pcp"]
+        pcp = transmission_stream["pcp"]
+        stream.properties["pcp"] = pcp
         stream.properties["route"] = []
         for transmission in transmission_stream["frames"][0]["transmissions"]:
             src_str = str(transmission["source"])
+            port = devices[src_str]["connections"][str(transmission["target"])]["src_port"]
             stream.properties["route"].append({
                 "device": src_str,
-                "port": devices[src_str]["connections"][str(transmission["target"])]["src_port"]
+                "port": port
             })
-    pass
+
+    if gclcalc:
+        for transmission_stream in transmission_array:
+            pcp = transmission_stream["pcp"]
+            stream = streams[transmission_stream["stream_id"]]
+            for frame in transmission_stream["frames"]:
+                for transmission in frame["transmissions"]:
+                    src_str = str(transmission["source"])
+                    if src_str not in gcls_in:
+                        gcls_in[src_str] = {}
+
+                    target = transmission["target"]
+                    if target not in gcls_in[src_str]:
+                        gcls_in[src_str][target] = {}
+
+                    entry = {
+                            "open_time_ns": transmission["start"],
+                            "close_time_ns": transmission["end"],
+                            "streams": [{"stream_id": stream.id, "frame_number": frame["frame_number"]}]
+                        }
+
+                    if pcp not in gcls_in[src_str][target]:
+                        gcls_in[src_str][target][pcp] = [entry]
+                    else:
+                        gcls_in[src_str][target][pcp].append(entry)
+
+        gcls = {}
+        for device, ports in gcls_in.items():
+            gcls[device] = {}
+            num_queues = devices[device]["num_queues"]
+            highest_queue = max(num_queues - 1, 0)
+            for target, pcps in ports.items():
+                gcls[device][target] = {
+                    highest_queue: {
+                        "initially_open": True,
+                        "offset": 0,
+                        "durations": [],
+                        "info": "ET port, open all the time"
+                    }
+                }
+                for pcp, gcl in pcps.items():
+                    calc_gcl(gcls[device][target], gcl, pcp, cycle_time, streams, device, target)
+        return gcls
+    return None
 
 
 def add_route_to_emergency_streams(e_streams, devices):
@@ -377,7 +421,6 @@ def add_route_to_emergency_streams(e_streams, devices):
                 "port": devices[src_str]["connections"][str(route_element["to"])]["src_port"]
             })
     pass
-
 
 
 def load_gcls(gcl_path, streams, devices):
@@ -428,7 +471,8 @@ def calc_gcl(port_gcls, gcl, pcp, cycle_time, streams, nid, tgt_id):
                     if stream.id == frame["stream_id"]:
                         if "arrivals" not in stream.properties:
                             stream.properties["arrivals"] = {}
-                        stream.properties["arrivals"][frame["frame_number"]] = (gcl_entry["open_time_ns"], gcl_entry["close_time_ns"])
+                        stream.properties["arrivals"][frame["frame_number"]] = (
+                            gcl_entry["open_time_ns"], gcl_entry["close_time_ns"])
 
         tclose = gcl_entry["close_time_ns"]
         topen = gcl_entry["open_time_ns"]
@@ -502,6 +546,7 @@ def extend_streams_with_multicast(streams, emergency_streams):
         get_next_ip(ip)
     pass
 
+
 def get_next_ip(ip):
     ip[3] += 1
     if ip[3] > 255:
@@ -545,14 +590,17 @@ def generate_stream_meta(topology, streams, devices, output):
         json.dump(stream_meta, f, indent=4)
 
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--topology', '-t', help="Topology path", type=str, required=True)
     parser.add_argument('--streams', '-s', help="Stream path", type=str, required=True)
     parser.add_argument('--emergency_streams', '-e', help="Emergency stream path", type=str, required=True)
-    parser.add_argument('--transmission', '-m', help="Transmission path", type=str, required=False)
-    parser.add_argument("--gcl", "-g", help="Path to GCL output", type=str, required=True)
+    parser.add_argument('--transmission', '-m',
+                        help="Path of Transmission Output (first scheduler, i.e. E-TSN/cp-based)", type=str,
+                        required=True)
+    parser.add_argument("--gcl", "-g",
+                        help="Path to GCL output, i.e. libtsndgm (if not provided, GCL is calculated from the transmission parameter, this is required for E-TSN)",
+                        type=str, required=False)
     parser.add_argument("--output", "-o", help="Output path", type=str, required=True)
     args = parser.parse_args()
 
@@ -562,8 +610,16 @@ if __name__ == "__main__":
     extend_streams_with_multicast(streams, e_streams)
     devices = generate_network(topology, args.output)
 
-    gcls = load_gcls(args.gcl, streams, devices)
-    parse_transmission_output(args.transmission, devices, streams)
+    if args.gcl is not None:
+        # Our ET approach (use output from libtsndgm)
+        parse_transmission_output(args.transmission, devices, streams, False)
+        gcls = load_gcls(args.gcl, streams, devices)
+        pass
+    else:
+        # E-TSN approach (use transmission output from E-TSN scheduler)
+        gcls = parse_transmission_output(args.transmission, devices, streams, True, 400000)
+        pass
+
     add_route_to_emergency_streams(e_streams, devices)
     generate_omnetpp_ini(topology, streams, e_streams, devices, gcls, args.output)
     generate_stream_meta(topology, streams, devices, args.output)

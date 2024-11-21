@@ -131,6 +131,7 @@ def check_arrival_delays(streams, streams_meta):
                 print(f"Arrival time too late for stream {stream_meta['id']}, frame {i}: Expected at most {latest_arrival_time}, got {arrival_time}")
                 too_late += 1
             if arrival_time != expected_arrival_time:
+                print(f"Arrival time delayed for stream {stream_meta['id']}, frame {i}: Expected {expected_arrival_time}, got {arrival_time}")
                 delayed += 1
         print(f"Stream {stream_meta['id']} has {delayed} delayed frames (due to emergency frames). ({too_late} too late)")
 
