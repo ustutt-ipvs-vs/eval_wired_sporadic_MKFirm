@@ -1,5 +1,6 @@
 import argparse
 import json
+import math
 import os.path
 from typing import Dict
 
@@ -346,7 +347,14 @@ def generate_emergency_apps(devices, identifier_mapping, pcp_mappings, emergency
         port += 1
 
 
-def parse_transmission_output(transmission_path, devices, streams, gclcalc, cycle_time=None):
+def calc_cycle_time(streams):
+    periods = set()
+    for stream in streams.values():
+        periods.add(stream.cycle_time_ns)
+    return math.lcm(*periods)
+
+
+def parse_transmission_output(transmission_path, devices, streams, gclcalc):
     # Read json
     with open(transmission_path, "r") as f:
         transmission_array = json.load(f)
@@ -358,15 +366,20 @@ def parse_transmission_output(transmission_path, devices, streams, gclcalc, cycl
         pcp = transmission_stream["pcp"]
         stream.properties["pcp"] = pcp
         stream.properties["route"] = []
+        last_src_str = None
         for transmission in transmission_stream["frames"][0]["transmissions"]:
             src_str = str(transmission["source"])
-            port = devices[src_str]["connections"][str(transmission["target"])]["src_port"]
-            stream.properties["route"].append({
-                "device": src_str,
-                "port": port
-            })
+            if src_str != last_src_str:
+                port = devices[src_str]["connections"][str(transmission["target"])]["src_port"]
+                stream.properties["route"].append({
+                    "device": src_str,
+                    "port": port
+                })
+            last_src_str = src_str
+
 
     if gclcalc:
+        cycle_time = calc_cycle_time(streams)
         for transmission_stream in transmission_array:
             pcp = transmission_stream["pcp"]
             stream = streams[transmission_stream["stream_id"]]
@@ -617,7 +630,7 @@ if __name__ == "__main__":
         pass
     else:
         # E-TSN approach (use transmission output from E-TSN scheduler)
-        gcls = parse_transmission_output(args.transmission, devices, streams, True, 400000)
+        gcls = parse_transmission_output(args.transmission, devices, streams, True)
         pass
 
     add_route_to_emergency_streams(e_streams, devices)

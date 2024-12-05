@@ -210,8 +210,10 @@ def hierarchical_rings_rec(no_switch_nodes, n=0, level_rings=[(1, 4), (4, 3)], l
     return G
 
 
-def grid(n, m):
+def grid_network(n, m):
     G = nx.grid_2d_graph(n, m)
+    for n in G.nodes:
+        G.nodes[n]['is_switch'] = True
 
     label_map = dict(zip(G.nodes, range(len(G.nodes))))
     G = nx.relabel_nodes(G, label_map)
@@ -221,6 +223,7 @@ def grid(n, m):
         node_id = len(G.nodes)
         G.add_node(node_id)
         G.add_edge(node_id, edge_node)
+        G.nodes[node_id]['is_switch'] = False
 
     return G
 
@@ -628,7 +631,7 @@ def debug_draw(G):
 
 def main(nodes=500, line=False, ring=False, mesh=False, star=False, dumbbell=False, fat_tree=False, edge_core=False,
          minimal_backbone=False, factory_backbone=False,
-         hierarchical_rings=False, export_summary=False, output_path="testdir", output_is_dir=True,
+         hierarchical_rings=False, grid=False, export_summary=False, output_path="testdir", output_is_dir=True,
          output_graphml=True, processing_delay_ns=2000,
          propagation_delay_ns=200, seed=None, seed_state=None):
     if seed_state:
@@ -663,6 +666,8 @@ def main(nodes=500, line=False, ring=False, mesh=False, star=False, dumbbell=Fal
         G = hierarchical_rings_rec(nodes, level_rings=hier_struct)
     elif line:
         G = two_porter_line(nodes)
+    elif grid:
+        G = grid_network(nodes, nodes+1)
     elif star:
         G = star_topology(nodes)
     elif dumbbell:
@@ -708,6 +713,7 @@ if __name__ == '__main__':
     group.add_argument('--factory_backbone', action='store_true', default=False)
     group.add_argument('--minimal_backbone', action='store_true', default=False)
     group.add_argument('--hierarchical_rings_rec', action='store_true', default=False)
+    group.add_argument('--grid', action='store_true', default=False)
     group.add_argument('--ring', action='store_true', default=False)
     group.add_argument('--line', action='store_true', default=False)
     parser.add_argument('--output_path', default='./examples')
@@ -728,6 +734,7 @@ if __name__ == '__main__':
          minimal_backbone=args.minimal_backbone,
          factory_backbone=args.factory_backbone,
          hierarchical_rings=args.hierarchical_rings_rec,
+         grid=args.grid,
          export_summary=args.export_summary,
          output_path=args.output_path,
          processing_delay_ns=args.processing_delay_ns,
