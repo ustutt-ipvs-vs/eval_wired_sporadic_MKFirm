@@ -137,6 +137,8 @@ def generate_network(topology, output):
             devices[connection["tgt_id"]]["connections"][connection["src_id"]]["done"] = True
 
     # Write to file
+    os.makedirs(output, exist_ok=True)
+
     with open(os.path.join(output, "Scenario.ned"), "w") as f:
         f.write(network_base.format(submodules=submodules, connections=connections))
     return devices
@@ -144,7 +146,7 @@ def generate_network(topology, output):
 
 ini_base = '''[General]
 network = "EmergencyNetwork"
-sim-time-limit = 10s
+sim-time-limit = 2s
 
 **.hasEgressTrafficShaping = true
 
@@ -461,6 +463,8 @@ def load_gcls(gcl_path, streams, devices):
 
 
 def calc_gcl(port_gcls, gcl, pcp, cycle_time, streams, nid, tgt_id):
+    gcl = sorted(gcl, key=lambda x: x["open_time_ns"])
+
     durations = []
     port_gcls[pcp] = {
         "initially_open": False,
@@ -602,6 +606,29 @@ def generate_stream_meta(topology, streams, devices, output):
     with open(os.path.join(output, "stream_meta.json"), "w") as f:
         json.dump(stream_meta, f, indent=4)
 
+def generate_scenario(a_topology, a_streams, a_emergency_streams, a_transmission, a_gcl, a_output):
+    topology = parse_topology(a_topology)
+    streams = parse_streams(topology, a_streams)
+    e_streams = parse_emergency_streams(a_emergency_streams)
+    extend_streams_with_multicast(streams, e_streams)
+    devices = generate_network(topology, a_output)
+
+    if a_gcl is not None:
+        # Our ET approach (use output from libtsndgm)
+        parse_transmission_output(a_transmission, devices, streams, False)
+        gcls = load_gcls(a_gcl, streams, devices)
+        pass
+    else:
+        # E-TSN approach (use transmission output from E-TSN scheduler)
+        gcls = parse_transmission_output(a_transmission, devices, streams, True)
+        pass
+
+    add_route_to_emergency_streams(e_streams, devices)
+    generate_omnetpp_ini(topology, streams, e_streams, devices, gcls, a_output)
+    generate_stream_meta(topology, streams, devices, a_output)
+
+    print(topology, streams)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -617,24 +644,4 @@ if __name__ == "__main__":
     parser.add_argument("--output", "-o", help="Output path", type=str, required=True)
     args = parser.parse_args()
 
-    topology = parse_topology(args.topology)
-    streams = parse_streams(topology, args.streams)
-    e_streams = parse_emergency_streams(args.emergency_streams)
-    extend_streams_with_multicast(streams, e_streams)
-    devices = generate_network(topology, args.output)
-
-    if args.gcl is not None:
-        # Our ET approach (use output from libtsndgm)
-        parse_transmission_output(args.transmission, devices, streams, False)
-        gcls = load_gcls(args.gcl, streams, devices)
-        pass
-    else:
-        # E-TSN approach (use transmission output from E-TSN scheduler)
-        gcls = parse_transmission_output(args.transmission, devices, streams, True)
-        pass
-
-    add_route_to_emergency_streams(e_streams, devices)
-    generate_omnetpp_ini(topology, streams, e_streams, devices, gcls, args.output)
-    generate_stream_meta(topology, streams, devices, args.output)
-
-    print(topology, streams)
+    generate_scenario(args.topology, args.steams, args.emergency_streams, args.transmission, args.gcl, args.output)

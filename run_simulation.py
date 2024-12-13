@@ -1,5 +1,6 @@
 import argparse
 import json
+import math
 import os
 import shlex
 import subprocess
@@ -96,10 +97,13 @@ def load_csv(output):
             (df['module'] == stream['sink']) & (df['name'] == 'meanBitLifeTimePerPacket:vector') & (
                     df['type'] == 'vector')]
 
-        stream["delay"] = [
-            list(map(float, delay_df['vectime'].item().split(" "))),
-            list(map(float, delay_df['vecvalue'].item().split(" "))),
-        ]
+        if not delay_df['vectime'].any():
+            stream["delay"] = [[], []]
+        else:
+            stream["delay"] = [
+                list(map(float, delay_df['vectime'].item().split(" "))),
+                list(map(float, delay_df['vecvalue'].item().split(" "))),
+            ]
     return streams, emergency_streams
 
 
@@ -115,6 +119,17 @@ def load_stream_meta(stream_meta_file):
 
     return stream_meta_by_port
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 
 def check_arrival_delays(streams, streams_meta):
     for port, stream in streams.items():
@@ -122,18 +137,25 @@ def check_arrival_delays(streams, streams_meta):
         num_frames_per_cycle = len(stream_meta["expected_arrivals"])
         delayed = 0
         too_late = 0
+        total = len(stream["delay"][0])
         for i in range(len(stream["delay"][0])):
             frame = i % num_frames_per_cycle
             arrival_time = round(stream["delay"][0][i] * 1e9)
             expected_arrival_time = round(stream_meta["expected_arrivals"][str(frame)] + (i-frame) * stream_meta["cycle_time"])
             latest_arrival_time = round(stream_meta["expected_latest_arrivals"][str(frame)] + (i-frame) * stream_meta["cycle_time"])
             if arrival_time > latest_arrival_time:
-                print(f"Arrival time too late for stream {stream_meta['id']}, frame {i}: Expected at most {latest_arrival_time}, got {arrival_time}")
+                # print(f"Arrival time too late for stream {stream_meta['id']}, frame {i}: Expected at most {latest_arrival_time}, got {arrival_time}")
                 too_late += 1
             if arrival_time != expected_arrival_time:
-                print(f"Arrival time delayed for stream {stream_meta['id']}, frame {i}: Expected {expected_arrival_time}, got {arrival_time}")
+                # print(f"Arrival time delayed for stream {stream_meta['id']}, frame {i}: Expected {expected_arrival_time}, got {arrival_time}")
                 delayed += 1
-        print(f"Stream {stream_meta['id']} has {delayed} delayed frames (due to emergency frames). ({too_late} too late)")
+        print_str = f"Stream {stream_meta['id']} has {delayed} of {total} delayed frames (due to emergency frames). ({too_late} too late)"
+        if too_late > 0:
+            print(bcolors.FAIL + print_str + bcolors.ENDC)
+        if total == 0:
+            print(bcolors.WARNING + print_str + bcolors.ENDC)
+        else:
+            print(bcolors.OKGREEN + print_str + bcolors.ENDC)
 
 
 
