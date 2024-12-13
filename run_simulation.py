@@ -152,7 +152,7 @@ def check_arrival_delays(streams, streams_meta):
         print_str = f"Stream {stream_meta['id']} has {delayed} of {total} delayed frames (due to emergency frames). ({too_late} too late)"
         if too_late > 0:
             print(bcolors.FAIL + print_str + bcolors.ENDC)
-        if total == 0:
+        elif total == 0:
             print(bcolors.WARNING + print_str + bcolors.ENDC)
         else:
             print(bcolors.OKGREEN + print_str + bcolors.ENDC)

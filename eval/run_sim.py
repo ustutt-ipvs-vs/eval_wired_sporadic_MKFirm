@@ -9,7 +9,7 @@ def prepare_and_run_sim(top_folder, stream_folder, sim_file):
 
     et_run = sim_file.split("_")[-1]
     et_run = ".".join(et_run.split(".")[:-1])
-    print(f"Generating simulation for {top_folder}/{stream_folder}/{sim_file}")
+    print(f"Generating simulation for {stream_folder}/{sim_file}")
     if sim_file.startswith("etsn"):
         out_folder = f"{stream_folder}/etsn_{et_run}"
         generate_scenario(f"{top_folder}/topology.json", f"{stream_folder}/streams.json",
