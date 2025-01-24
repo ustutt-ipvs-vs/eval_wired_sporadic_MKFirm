@@ -373,19 +373,24 @@ def parse_transmission_output(transmission_path, devices, streams, gclcalc):
     gcls_in = {}
 
     for transmission_stream in transmission_array:
-        stream = streams[transmission_stream["stream_id"]]
+        stream_id = transmission_stream["stream_id"]
         pcp = transmission_stream["pcp"]
-        stream.properties["pcp"] = pcp
-        stream.properties["route"] = []
+        stream = None
+        if stream_id < 1_000_000:
+            # Special case for ET streams
+            stream = streams[stream_id]
+            stream.properties["pcp"] = pcp
+            stream.properties["route"] = []
         last_src_str = None
         for transmission in transmission_stream["frames"][0]["transmissions"]:
             src_str = str(transmission["source"])
             if src_str != last_src_str:
                 port = devices[src_str]["connections"][str(transmission["target"])]["src_port"]
-                stream.properties["route"].append({
-                    "device": src_str,
-                    "port": port
-                })
+                if stream is not None:
+                    stream.properties["route"].append({
+                        "device": src_str,
+                        "port": port
+                    })
             last_src_str = src_str
 
 
@@ -393,7 +398,7 @@ def parse_transmission_output(transmission_path, devices, streams, gclcalc):
         cycle_time = calc_cycle_time(streams)
         for transmission_stream in transmission_array:
             pcp = transmission_stream["pcp"]
-            stream = streams[transmission_stream["stream_id"]]
+            stream_id = transmission_stream["stream_id"]
             for frame in transmission_stream["frames"]:
                 for transmission in frame["transmissions"]:
                     src_str = str(transmission["source"])
@@ -407,7 +412,7 @@ def parse_transmission_output(transmission_path, devices, streams, gclcalc):
                     entry = {
                             "open_time_ns": transmission["start"],
                             "close_time_ns": transmission["end"],
-                            "streams": [{"stream_id": stream.id, "frame_number": frame["frame_number"]}]
+                            "streams": [{"stream_id": stream_id, "frame_number": frame["frame_number"]}]
                         }
 
                     if pcp not in gcls_in[src_str][target]:
@@ -491,14 +496,24 @@ def calc_gcl(port_gcls, gcl, pcp, cycle_time, streams, nid, tgt_id):
                     if stream.id == frame["stream_id"]:
                         if "offsets" not in stream.properties:
                             stream.properties["offsets"] = {}
-                        stream.properties["offsets"][frame["frame_number"]] = gcl_entry["open_time_ns"]
+                        # Don't overwrite offsets, as for etsn there might be multiple openings but we need the first
+                        frame_number = frame["frame_number"]
+                        if frame_number not in stream.properties["offsets"]:
+                            stream.properties["offsets"][frame_number] = gcl_entry["open_time_ns"]
+
             elif tgt_id == stream.target:
                 for frame in gcl_entry["streams"]:
                     if stream.id == frame["stream_id"]:
                         if "arrivals" not in stream.properties:
                             stream.properties["arrivals"] = {}
-                        stream.properties["arrivals"][frame["frame_number"]] = (
-                            gcl_entry["open_time_ns"], gcl_entry["close_time_ns"])
+                        # Do not overwrite arrival for the same frame:
+                        if frame["frame_number"] not in stream.properties["arrivals"]:
+                            stream.properties["arrivals"][frame["frame_number"]] = (
+                                gcl_entry["open_time_ns"], gcl_entry["close_time_ns"])
+                        else:
+                            # But update the close_time only
+                            stream.properties["arrivals"][frame["frame_number"]] = (
+                                stream.properties["arrivals"][frame["frame_number"]][0], gcl_entry["close_time_ns"])
 
         tclose = gcl_entry["close_time_ns"]
         topen = gcl_entry["open_time_ns"]

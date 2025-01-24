@@ -1,5 +1,5 @@
 import os
-from run_simulation import run_simulation, extract_data, eval_results
+from run_simulation import run_simulation
 from generate_omnetpp_scenario import generate_scenario
 
 
@@ -27,8 +27,6 @@ def prepare_and_run_sim(top_folder, stream_folder, sim_file):
                           out_folder)
 
     run_simulation(out_folder, "/home/haugls/workspaces/emergency/inet", out_folder, "omnetpp.ini")
-    extract_data(out_folder)
-    eval_results(out_folder, f"{out_folder}/stream_meta.json")
 
 
 if __name__ == "__main__":
