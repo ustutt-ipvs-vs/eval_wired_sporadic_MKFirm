@@ -217,9 +217,9 @@ def grid_network(n, m):
 
     label_map = dict(zip(G.nodes, range(len(G.nodes))))
     G = nx.relabel_nodes(G, label_map)
-    edge_nodes = set(node for node, degree in G.degree() if degree <= 3)
+    all_switches = set(G.nodes())
 
-    for edge_node in edge_nodes:
+    for edge_node in all_switches:
         node_id = len(G.nodes)
         G.add_node(node_id)
         G.add_edge(node_id, edge_node)

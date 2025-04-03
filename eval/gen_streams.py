@@ -31,17 +31,20 @@ if __name__ == "__main__":
             for perc_tt in streams_per_device:
                 n_tt = int(devices * perc_tt)
                 config_tt.set("generic", "number_of_tt_streams", str(n_tt))
-                out_folder = f"{folder}/s_{perc_tt}"
-                os.makedirs(out_folder, exist_ok=True)
-                main_tt(topology=f"{folder}/topology.json", output=f"{out_folder}/streams.json", config=config_tt)
 
                 for perc_et in et_streams_per_stream:
-                    n_et = int(n_tt * perc_et)
-                    config_et.set("generic", "number_of_emergency_streams", str(n_et))
 
-                    # TODO: figure out how to generate ET streams
-                    main_et(f"{folder}/topology.json",
-                            config_et,
-                            f"{out_folder}/streams_et_{perc_et}.json"
-                            # f"{out_folder}/streams.json", # TODO use or not?
-                            )
+                    for i in range(10):
+                        out_folder = f"{folder}/s_{perc_tt}_{perc_et}"
+                        os.makedirs(out_folder, exist_ok=True)
+                        main_tt(topology=f"{folder}/topology.json", output=f"{out_folder}/streams.json", config=config_tt)
+
+                        n_et = int(n_tt * perc_et)
+                        config_et.set("generic", "number_of_emergency_streams", str(n_et))
+
+                        # TODO: figure out how to generate ET streams
+                        main_et(f"{folder}/topology.json",
+                                config_et,
+                                f"{out_folder}/streams_et.json"
+                                # f"{out_folder}/streams.json", # TODO use or not?
+                                )
