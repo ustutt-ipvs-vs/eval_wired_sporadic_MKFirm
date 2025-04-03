@@ -23,20 +23,27 @@ def run_scheduler(exec_command, out_file):
     else:
         print("Scheduler encountered an error.")
 
-def run_scheduler_for_et_streams(top_folder, stream_folder, et_stream_file):
+def run_scheduler_for_et_streams(top_folder, stream_folder):
     tt_stream_file = f"{top_folder}/{stream_folder}/streams.json"
+    et_stream_file = f"{top_folder}/{stream_folder}/streams_et.json"
 
-    et_run = et_stream_file.split("_")[-1]
-    et_run = ".".join(et_run.split(".")[:-1])
+    # Check if executed file exists
+    if os.path.exists(f"{top_folder}/{stream_folder}/executed"):
+        print("Skipping, already executed")
+        return
 
-    etsn_out_file = f"{top_folder}/{stream_folder}/etsn_out_{et_run}.json"
+    etsn_out_file = f"{top_folder}/{stream_folder}/etsn_out.json"
     exec_command_etsn = f'python3 {estn_scheduler_path} -n {top_folder}/topology.json -t {tt_stream_file} -e {et_stream_file} --cplex {cplex_path} -o {etsn_out_file}'
     run_scheduler(exec_command_etsn, etsn_out_file)
 
     cp_file = f"{top_folder}/{stream_folder}/cp_out.json"
-    libtsndgm_out_file = f"{top_folder}/{stream_folder}/libtsndgm_out_{et_run}.json"
+    libtsndgm_out_file = f"{top_folder}/{stream_folder}/libtsndgm_out.json"
     exec_command_libtsndgm = f'{libtsndgm_path} -t {top_folder}/topology.json -s {tt_stream_file} -z {cp_file} --e_streams {et_stream_file} -o {libtsndgm_out_file}'
     run_scheduler(exec_command_libtsndgm, libtsndgm_out_file)
+
+    # Generate a "executed" file
+    open(f"{top_folder}/{stream_folder}/executed", "w").close()
+
 
 def run_scheduler_for_tt_streams(top_folder, stream_folder):
     tt_stream_file = f"{top_folder}/{stream_folder}/streams.json"
@@ -59,17 +66,16 @@ def run_scheduler_for_tt_streams(top_folder, stream_folder):
 
 def run_scheduler_for_streams(top_folder, stream_folder):
     run_scheduler_for_tt_streams(top_folder, stream_folder)
+    run_scheduler_for_et_streams(top_folder, stream_folder)
 
-    for et_stream_filename in os.listdir(f"{top_folder}/{stream_folder}"):
-        if et_stream_filename.startswith("streams_et"):
-            et_stream_file = f"{top_folder}/{stream_folder}/{et_stream_filename}"
-            run_scheduler_for_et_streams(top_folder, stream_folder, et_stream_file)
 
 
 def run_scheduler_for_topology(top_folder):
     for stream_folder in os.listdir(top_folder):
         if stream_folder.startswith("s_"):
-            run_scheduler_for_streams(top_folder, stream_folder)
+            for run_folder in os.listdir(f"{top_folder}/{stream_folder}"):
+                if run_folder.startswith("r_"):
+                    run_scheduler_for_streams(top_folder, f"{stream_folder}/{run_folder}")
 
 
 if __name__ == "__main__":

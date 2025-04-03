@@ -35,7 +35,7 @@ if __name__ == "__main__":
                 for perc_et in et_streams_per_stream:
 
                     for i in range(10):
-                        out_folder = f"{folder}/s_{perc_tt}_{perc_et}"
+                        out_folder = f"{folder}/s_{perc_tt}_{perc_et}/r_{i}"
                         os.makedirs(out_folder, exist_ok=True)
                         main_tt(topology=f"{folder}/topology.json", output=f"{out_folder}/streams.json", config=config_tt)
 
