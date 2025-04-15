@@ -18,7 +18,6 @@ class EtStream:
     bucket_size_byte: int
     route: List[EgressPort]
     frame_size_byte: int
-    survival_time_ns: int
     min_inter_event_time_ns: int
 
     def __init__(self, stream_id: int):
@@ -35,14 +34,12 @@ class EtStream:
                 'rate_mbps': float(self.rate_mbps),
                 'bucket_size_byte': int(self.bucket_size_byte),
                 'frame_size_byte': int(self.frame_size_byte),
-                'survival_time_ns': int(self.survival_time_ns),
                 'min_inter_event_time_ns': int(self.min_inter_event_time_ns),
                 'route': Routing.route_to_json_ready(self.route)}
 
-    def set_and_calculate_bucket_attributes(self, frame_size_byte: int, survival_time_ns: int):
+    def set_and_calculate_bucket_attributes(self, frame_size_byte: int, min_inter_event_time_ns):
         self.frame_size_byte = frame_size_byte
-        self.survival_time_ns = survival_time_ns
-        self.min_inter_event_time_ns = int(survival_time_ns * 2 / 3)
+        self.min_inter_event_time_ns = min_inter_event_time_ns
         self.bucket_size_byte = self.frame_size_byte
         # byte/ns = kByte/us = MByte/ms -> /1000 for MByte/s
         self.rate_mbps = self.bucket_size_byte / (1000 * self.min_inter_event_time_ns)

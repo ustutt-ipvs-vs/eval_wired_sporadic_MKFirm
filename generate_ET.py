@@ -30,7 +30,7 @@ def main(topology, config, output, tt_streams=None):
         bucket_sizes_byte = np.arange(min_bucket_size_byte, max_bucket_size_byte, step_bucket_size_byte)
 
         frame_sizes_byte: List[int] = json.loads(config.get('random ET values', 'frame_sizes_in_byte'))
-        survival_times_us: List[int] = json.loads(config.get('random ET values', 'survival_times_us'))
+        min_inter_event_times_us: List[int] = json.loads(config.get('random ET values', 'min_inter_event_time_us'))
 
     ################
     # create streams
@@ -38,7 +38,7 @@ def main(topology, config, output, tt_streams=None):
     emergency_streams = []
     if random_et_streams:
         for i in range(0, number_of_streams):
-            emergency_streams.append(create_random_emergency_stream(i, topology, frame_sizes_byte, survival_times_us))
+            emergency_streams.append(create_random_emergency_stream(i, topology, frame_sizes_byte, min_inter_event_times_us))
     else:
         emergency_streams = create_emergency_streams_based_on_tt_streams(topology, tt_streams, number_of_streams)
 
@@ -53,12 +53,12 @@ def get_random_source_and_target(device_ids) -> Tuple[int, int]:
     return source, target
 
 
-def create_random_emergency_stream(stream_id: int, topology, frame_sizes_byte, survival_times_us):
+def create_random_emergency_stream(stream_id: int, topology, frame_sizes_byte, min_inter_event_times_us):
     et_stream = EtStream(stream_id)
 
     frame_size = random.choice(frame_sizes_byte)
-    survival_time_ns = random.choice(survival_times_us) * 1000
-    et_stream.set_and_calculate_bucket_attributes(frame_size, survival_time_ns)
+    min_inter_event_time_ns = random.choice(min_inter_event_times_us) * 1000
+    et_stream.set_and_calculate_bucket_attributes(frame_size, min_inter_event_time_ns)
 
     device_ids: List[int] = topology.get_end_device_ids()
     source, target = get_random_source_and_target(device_ids)

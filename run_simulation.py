@@ -9,7 +9,7 @@ import pandas as pd
 from generate_omnetpp_scenario import parse_emergency_streams
 
 
-def run_simulation(input_dir, inet_dir, result_dir, ini_filename):
+def run_simulation(input_dir, inet_dir, result_dir, ini_filename, num_run=None):
     input_dir = os.path.abspath(input_dir)
     inet_dir = os.path.abspath(inet_dir)
     result_dir = os.path.abspath(result_dir)
@@ -22,7 +22,7 @@ def run_simulation(input_dir, inet_dir, result_dir, ini_filename):
     elif not os.path.exists(f'{result_dir}'):
         os.makedirs(f'{result_dir}')
 
-    exec_command = f'opp_run -u Cmdenv -m -c General -n {input_dir}:{inet_dir}/src --image-path={inet_dir}/images -l {inet_dir}/src/INET {ini_file} --result-dir={result_dir}'
+    exec_command = f'opp_run -u Cmdenv -m -c General -n {input_dir}:{inet_dir}/src --image-path={inet_dir}/images -l {inet_dir}/src/INET {ini_file} --result-dir={result_dir} {ini_filename}'
 
     f = open(log_file, "w+")
 

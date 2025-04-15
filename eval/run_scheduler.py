@@ -1,21 +1,37 @@
+import json
 import os
 import shlex
 import subprocess
+import time
+
+from eval.settings import estn_scheduler_path, libtsndgm_path, cplex_path, cp_based_scheduling_path
 
 
-cplex_path = "/home/haugls/cplex/cpoptimizer/bin/x86-64_linux/cpoptimizer"
-cp_based_scheduling_path = "../../cp-based-tsn-scheduling/main.py"
-estn_scheduler_path = "../../e-tsn/main.py"
-libtsndgm_path = "../../libtsndgm/release/DgmExec"
+def run_scheduler(exec_command, out_dir, out_file_basename):
+    log_file = f"{out_dir}/{out_file_basename}.log"
+    meta_file = f"{out_dir}/{out_file_basename}_meta.json"
 
-def run_scheduler(exec_command, out_file):
-    if os.path.exists(out_file):
-        print("Skipping, already exists", out_file)
+    if os.path.exists(log_file):
+        print("Skipping, already exists", log_file)
         return
 
     print(f"Running scheduler with command: {exec_command}")
-    p = subprocess.Popen(shlex.split(exec_command))
+    start_time = time.time()
+    p = subprocess.Popen(shlex.split(exec_command), stdout=open(log_file, "w"), stderr=subprocess.STDOUT)
     p.communicate()
+    end_time = time.time()
+
+    # Write meta information to the meta file
+    elapsed_time = end_time - start_time
+    meta = {
+        "command": exec_command,
+        "start_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time)),
+        "end_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(end_time)),
+        "elapsed_time": elapsed_time,
+        "return_code": p.returncode
+    }
+    with open(meta_file, "w") as meta_f:
+        json.dump(meta, meta_f, indent=4)
 
     # Check if the process completed successfully
     if p.returncode == 0:
@@ -26,20 +42,23 @@ def run_scheduler(exec_command, out_file):
 def run_scheduler_for_et_streams(top_folder, stream_folder):
     tt_stream_file = f"{top_folder}/{stream_folder}/streams.json"
     et_stream_file = f"{top_folder}/{stream_folder}/streams_et.json"
+    out_folder = f"{top_folder}/{stream_folder}"
 
     # Check if executed file exists
     if os.path.exists(f"{top_folder}/{stream_folder}/executed"):
         print("Skipping, already executed")
         return
 
-    etsn_out_file = f"{top_folder}/{stream_folder}/etsn_out.json"
+    etsn_out_basename = f"etsn_out"
+    etsn_out_file = f"{out_folder}/{etsn_out_basename}.json"
     exec_command_etsn = f'python3 {estn_scheduler_path} -n {top_folder}/topology.json -t {tt_stream_file} -e {et_stream_file} --cplex {cplex_path} -o {etsn_out_file}'
-    run_scheduler(exec_command_etsn, etsn_out_file)
+    run_scheduler(exec_command_etsn, out_folder, etsn_out_basename)
 
     cp_file = f"{top_folder}/{stream_folder}/cp_out.json"
-    libtsndgm_out_file = f"{top_folder}/{stream_folder}/libtsndgm_out.json"
+    libtsn_out_basename = f"libtsndgm_out"
+    libtsndgm_out_file = f"{out_folder}/{libtsn_out_basename}.json"
     exec_command_libtsndgm = f'{libtsndgm_path} -t {top_folder}/topology.json -s {tt_stream_file} -z {cp_file} --e_streams {et_stream_file} -o {libtsndgm_out_file}'
-    run_scheduler(exec_command_libtsndgm, libtsndgm_out_file)
+    run_scheduler(exec_command_libtsndgm, out_folder, libtsn_out_basename)
 
     # Generate a "executed" file
     open(f"{top_folder}/{stream_folder}/executed", "w").close()

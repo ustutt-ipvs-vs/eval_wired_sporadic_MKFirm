@@ -1,82 +1,67 @@
 import os
-import shlex
-import subprocess
+from concurrent.futures import ThreadPoolExecutor
 
+from eval.run_scheduler import run_scheduler
+from eval.settings import EVAL_PATH, estn_scheduler_path, cplex_path, libtsndgm_path, cp_based_scheduling_path, \
+    cplex_timelimit, cplex_threads
 
-cplex_path = "/home/haugls/cplex/cpoptimizer/bin/x86-64_linux/cpoptimizer"
-cp_based_scheduling_path = "../../cp-based-tsn-scheduling/main.py"
-estn_scheduler_path = "../../e-tsn/main.py"
-libtsndgm_path = "../../libtsndgm/release/DgmExec"
-
-def run_scheduler(exec_command, out_file):
-    if os.path.exists(out_file):
-        print("Skipping, already exists", out_file)
-        return
-
-    print(f"Running scheduler with command: {exec_command}")
-    p = subprocess.Popen(shlex.split(exec_command))
-    p.communicate()
-
-    # Check if the process completed successfully
-    if p.returncode == 0:
-        print("Scheduler completed successfully.")
-    else:
-        print("Scheduler encountered an error.")
 
 def run_scheduler_for_et_streams(top_folder, stream_folder, et_folder):
     tt_stream_file = f"{top_folder}/{stream_folder}/streams.json"
     et_stream_file = f"{top_folder}/{stream_folder}/{et_folder}/streams_et.json"
 
-    # Check if executed file exists
-    if os.path.exists(f"{top_folder}/{stream_folder}/{et_folder}/executed"):
-        print("Skipping, already executed")
-        return
+    out_dir = f"{top_folder}/{stream_folder}/{et_folder}"
 
-    etsn_out_file = f"{top_folder}/{stream_folder}/{et_folder}/etsn_out.json"
-    exec_command_etsn = f'python3 {estn_scheduler_path} -n {top_folder}/topology.json -t {tt_stream_file} -e {et_stream_file} --cplex {cplex_path} -o {etsn_out_file}'
-    run_scheduler(exec_command_etsn, etsn_out_file)
+    etsn_out_basename = "etsn_out"
+    etsn_out_file = f"{out_dir}/{etsn_out_basename}.json"
+    exec_command_etsn = f'python3 {estn_scheduler_path} -n {top_folder}/topology.json -t {tt_stream_file} -e {et_stream_file} --cplex {cplex_path} -o {etsn_out_file} --timelimit {cplex_timelimit} --threads {cplex_threads}'
+    run_scheduler(exec_command_etsn, out_dir, etsn_out_basename)
+
+    etsn2_out_basename = "etsn2_out"
+    etsn2_out_file = f"{out_dir}/{etsn2_out_basename}.json"
+    exec_command_etsn2 = f'python3 {estn_scheduler_path} -N 2 -n {top_folder}/topology.json -t {tt_stream_file} -e {et_stream_file} --cplex {cplex_path} -o {etsn2_out_file} --timelimit {cplex_timelimit} --threads {cplex_threads}'
+    run_scheduler(exec_command_etsn2, out_dir, etsn2_out_basename)
 
     cp_file = f"{top_folder}/{stream_folder}/cp_out.json"
-    libtsndgm_out_file = f"{top_folder}/{stream_folder}/{et_folder}/libtsndgm_out.json"
+    libtsndgm_out_basename = "libtsndgm_out"
+    libtsndgm_out_file = f"{out_dir}/{libtsndgm_out_basename}.json"
     exec_command_libtsndgm = f'{libtsndgm_path} -t {top_folder}/topology.json -s {tt_stream_file} -z {cp_file} --e_streams {et_stream_file} -o {libtsndgm_out_file}'
-    run_scheduler(exec_command_libtsndgm, libtsndgm_out_file)
-
-    # Generate a "executed" file
-    open(f"{top_folder}/{stream_folder}/executed", "w").close()
+    run_scheduler(exec_command_libtsndgm, out_dir, libtsndgm_out_basename)
 
 
 def run_scheduler_for_tt_streams(top_folder, stream_folder):
     tt_stream_file = f"{top_folder}/{stream_folder}/streams.json"
-    out_file = f"{top_folder}/{stream_folder}/cp_out.json"
+    out_folder = f"{top_folder}/{stream_folder}/"
+    out_file_base = "cp_out"
+    out_file = f"{out_folder}/{out_file_base}.json"
 
-    if os.path.exists(out_file):
-        print("Skipping, already exists", out_file)
-        return
-
-    exec_command = f'python3 {cp_based_scheduling_path} -n {top_folder}/topology.json -s {tt_stream_file} --cplex {cplex_path} --out {out_file}'
-    print(f"Running scheduler with command: {exec_command}")
-    p = subprocess.Popen(shlex.split(exec_command))
-    p.communicate()
-
-    # Check if the process completed successfully
-    if p.returncode == 0:
-        print("Scheduler completed successfully.")
-    else:
-        print("Scheduler encountered an error.")
+    exec_command = f'python3 {cp_based_scheduling_path} -n {top_folder}/topology.json -s {tt_stream_file} --cplex {cplex_path} --out {out_file} --timelimit {cplex_timelimit} --threads {cplex_threads}'
+    run_scheduler(exec_command, out_folder, out_file_base)
 
 
 def run_scheduler_for_topology(top_folder):
-    for stream_folder in os.listdir(top_folder):
-        if stream_folder.startswith("p_"):
-            for run_folder in os.listdir(f"{top_folder}/{stream_folder}"):
-                if run_folder.startswith("r_"):
-                    run_scheduler_for_tt_streams(f"{top_folder}", f"{stream_folder}/{run_folder}")
-                    for et_folder in os.listdir(f"{top_folder}/{stream_folder}/{run_folder}"):
-                        if et_folder.startswith("et_"):
-                            run_scheduler_for_et_streams(top_folder, f"{stream_folder}/{run_folder}/", et_folder)
+    with ThreadPoolExecutor(max_workers=12) as executor:
+        futures = []
+        for stream_folder in os.listdir(top_folder):
+            if stream_folder.startswith("p_"):
+                for run_folder in os.listdir(f"{top_folder}/{stream_folder}"):
+                    if run_folder.startswith("r_"):
+                        # run_for_runfolder(top_folder, stream_folder, run_folder)
+                        executor.submit(run_for_runfolder, top_folder, stream_folder, run_folder)
+
+        for future in futures:
+            future.result()
+
+
+def run_for_runfolder(top_folder, stream_folder, run_folder):
+    run_scheduler_for_tt_streams(f"{top_folder}", f"{stream_folder}/{run_folder}")
+    for et_folder in os.listdir(f"{top_folder}/{stream_folder}/{run_folder}"):
+        if et_folder.startswith("et_"):
+            run_scheduler_for_et_streams(top_folder, f"{stream_folder}/{run_folder}/", et_folder)
 
 
 if __name__ == "__main__":
-    for folder in os.listdir("."):
+    for folder in os.listdir(EVAL_PATH):
         if folder.startswith("t_"):
+            folder = f"{EVAL_PATH}/{folder}"
             run_scheduler_for_topology(folder)

@@ -1,5 +1,7 @@
 import configparser
 import os
+
+from eval.settings import EVAL_PATH
 from generate_TT import main as main_tt
 from generate_ET import main as main_et
 
@@ -20,8 +22,9 @@ if __name__ == "__main__":
         raise FileNotFoundError
     config_et.read(ini_path_et)
 
-    for folder in os.listdir("."):
+    for folder in os.listdir(EVAL_PATH):
         if folder.startswith("t_"):
+            folder = f"{EVAL_PATH}/{folder}"
             print(f"Generate streams for {folder}")
 
             grid_size = folder.split("_")[1].split("x")
@@ -31,7 +34,7 @@ if __name__ == "__main__":
                 n_tt = int(devices * perc_tt)
                 config_tt.set("generic", "number_of_tt_streams", str(n_tt))
 
-                for i in range(10):
+                for i in range(100):
                     for n_et in range(1, 2 * n_tt + 1):
                         out_folder_tt = f"{folder}/p_{n_tt}/r_{i}"
                         out_folder_et = f"{folder}/p_{n_tt}/r_{i}/et_{n_et}"
