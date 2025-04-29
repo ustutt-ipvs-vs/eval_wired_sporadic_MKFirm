@@ -4,7 +4,7 @@ import shlex
 import subprocess
 import time
 
-from eval.settings import estn_scheduler_path, libtsndgm_path, cplex_path, cp_based_scheduling_path
+from emergency_eval.settings import estn_scheduler_path, libtsndgm_path, cplex_path, cp_based_scheduling_path
 
 
 def run_scheduler(exec_command, out_dir, out_file_basename):

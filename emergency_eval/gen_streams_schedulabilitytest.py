@@ -1,7 +1,7 @@
 import configparser
 import os
 
-from eval.settings import EVAL_PATH
+from emergency_eval.settings import EVAL_PATH
 from generate_TT import main as main_tt
 from generate_ET import main as main_et
 

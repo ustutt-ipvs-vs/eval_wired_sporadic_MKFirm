@@ -147,6 +147,7 @@ def generate_network(topology, output):
 ini_base = '''[General]
 network = "EmergencyNetwork"
 sim-time-limit = 2s
+repeat = {repeat}
 
 **.hasEgressTrafficShaping = true
 
@@ -243,7 +244,7 @@ def add_mac_entries(devices, stream_properties):
         })
 
 
-def generate_omnetpp_ini(topology, streams: Dict[int, TtStream], emergency_streams, devices, gcls, output):
+def generate_omnetpp_ini(topology, streams: Dict[int, TtStream], emergency_streams, devices, gcls, repeat, output):
     identifier_mapping = []
     pcp_mappings = []
     generate_apps(devices, identifier_mapping, pcp_mappings, streams, topology)
@@ -275,7 +276,7 @@ def generate_omnetpp_ini(topology, streams: Dict[int, TtStream], emergency_strea
                 gcl_str += gcl_base.format(name=devices[device_id]["name"], port=port, pcp=pcp, **gcl_entry)
 
     with open(os.path.join(output, "omnetpp.ini"), "w") as f:
-        f.write(ini_base.format(apps=device_str,
+        f.write(ini_base.format(apps=device_str, repeat=repeat,
                                 identifier_mapping=identifier_mapping_spacing.join(identifier_mapping),
                                 pcp_mapping=pcp_mapping_spacing.join(pcp_mappings), gcls=gcl_str))
 
@@ -630,7 +631,7 @@ def generate_stream_meta(topology, streams, devices, output):
     with open(os.path.join(output, "stream_meta.json"), "w") as f:
         json.dump(stream_meta, f, indent=4)
 
-def generate_scenario(a_topology, a_streams, a_emergency_streams, a_transmission, a_gcl, a_output):
+def generate_scenario(a_topology, a_streams, a_emergency_streams, a_transmission, a_gcl, a_output, repeat=1):
     topology = parse_topology(a_topology)
     streams = parse_streams(topology, a_streams)
     e_streams = parse_emergency_streams(a_emergency_streams)
@@ -648,7 +649,7 @@ def generate_scenario(a_topology, a_streams, a_emergency_streams, a_transmission
         pass
 
     add_route_to_emergency_streams(e_streams, devices)
-    generate_omnetpp_ini(topology, streams, e_streams, devices, gcls, a_output)
+    generate_omnetpp_ini(topology, streams, e_streams, devices, gcls, repeat, a_output)
     generate_stream_meta(topology, streams, devices, a_output)
 
     print(topology, streams)

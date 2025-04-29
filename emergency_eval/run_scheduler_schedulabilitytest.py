@@ -1,9 +1,9 @@
 import os
 from concurrent.futures import ThreadPoolExecutor
 
-from eval.run_scheduler import run_scheduler
-from eval.settings import EVAL_PATH, estn_scheduler_path, cplex_path, libtsndgm_path, cp_based_scheduling_path, \
-    cplex_timelimit, cplex_threads
+from emergency_eval.run_scheduler import run_scheduler
+from emergency_eval.settings import EVAL_PATH, estn_scheduler_path, cplex_path, libtsndgm_path, cp_based_scheduling_path, \
+    cplex_timelimit, cplex_threads, num_workers
 
 
 def run_scheduler_for_et_streams(top_folder, stream_folder, et_folder):
@@ -40,7 +40,7 @@ def run_scheduler_for_tt_streams(top_folder, stream_folder):
 
 
 def run_scheduler_for_topology(top_folder):
-    with ThreadPoolExecutor(max_workers=12) as executor:
+    with ThreadPoolExecutor(max_workers=num_workers) as executor:
         futures = []
         for stream_folder in os.listdir(top_folder):
             if stream_folder.startswith("p_"):

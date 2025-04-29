@@ -1,4 +1,4 @@
-from eval.settings import EVAL_PATH
+from emergency_eval.settings import EVAL_PATH
 from generate_Topology import main
 
 if __name__ == "__main__":

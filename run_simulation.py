@@ -15,6 +15,8 @@ def run_simulation(input_dir, inet_dir, result_dir, ini_filename, num_run=None):
     result_dir = os.path.abspath(result_dir)
     ini_file = os.path.join(input_dir, 'omnetpp.ini')
     log_file = os.path.join(result_dir, 'simulation.log')
+    if num_run is not None:
+        log_file = os.path.join(result_dir, f'simulation_{num_run}.log')
 
     if os.path.exists(log_file):
         print("Skipping as simulation seems to be already done or ongoing.")
@@ -22,7 +24,10 @@ def run_simulation(input_dir, inet_dir, result_dir, ini_filename, num_run=None):
     elif not os.path.exists(f'{result_dir}'):
         os.makedirs(f'{result_dir}')
 
-    exec_command = f'opp_run -u Cmdenv -m -c General -n {input_dir}:{inet_dir}/src --image-path={inet_dir}/images -l {inet_dir}/src/INET {ini_file} --result-dir={result_dir} {ini_filename}'
+    num_run_text = ""
+    if num_run is not None:
+        num_run_text = f'-r {num_run}'
+    exec_command = f'opp_run -u Cmdenv -m {num_run_text} -c General -n {input_dir}:{inet_dir}/src --image-path={inet_dir}/images -l {inet_dir}/src/INET {ini_file} --result-dir={result_dir} {ini_filename}'
 
     f = open(log_file, "w+")
 
@@ -34,7 +39,7 @@ def run_simulation(input_dir, inet_dir, result_dir, ini_filename, num_run=None):
     if p.returncode == 0:
         print("Simulation completed successfully.")
     else:
-        print("Simulation encountered an error, see {log_file} for details.")
+        print(f"Simulation encountered an error, see {log_file} for details.")
 
 
 

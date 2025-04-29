@@ -155,12 +155,12 @@ def load_eval_files(output, stream_meta_file):
     return streams, emergency_streams, streams_meta
 
 
-def extract_data(output_dir):
+def extract_data(output_dir, run_number=0):
     filter = "meanBitLifeTimePerPacket:vector OR localPort OR destPort"
-    vec_file = os.path.join(output_dir, 'General-#0.vec')
-    sca_file = os.path.join(output_dir, 'General-#0.sca')
-    output_file = os.path.join(output_dir, 'output.csv')
-    log_file = os.path.join(output_dir, 'extract.log')
+    vec_file = os.path.join(output_dir, f'General-#{run_number}.vec')
+    sca_file = os.path.join(output_dir, f'General-#{run_number}.sca')
+    output_file = os.path.join(output_dir, f'output-{run_number}.csv')
+    log_file = os.path.join(output_dir, f'extract-{run_number}.log')
 
     exec_command = f'opp_scavetool x {vec_file} {sca_file} -F CSV-R -f \'{filter}\' -o {output_file}'
 

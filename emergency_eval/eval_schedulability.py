@@ -2,7 +2,7 @@ import os
 
 from matplotlib import pyplot as plt
 
-from eval.settings import EVAL_PATH
+from emergency_eval.settings import EVAL_PATH
 
 
 def eval_for_folder(top_folder, stream_folder, run_folder, et_folder, results):
@@ -24,8 +24,6 @@ def eval_for_folder(top_folder, stream_folder, run_folder, et_folder, results):
     etsn2_success = False
     libtsndgm_succes = False
 
-    if not os.path.exists(f"{top_folder}/{stream_folder}/{run_folder}/{et_folder}/executed"):
-        print("NOT EXECUTED!", top_folder, stream_folder, run_folder, et_folder)
     if os.path.exists(f"{top_folder}/{stream_folder}/{run_folder}/{et_folder}/etsn_out.json"):
         results[num_streams][num_et_streams]["etsn"] += 1
         etsn_success = True
@@ -38,7 +36,7 @@ def eval_for_folder(top_folder, stream_folder, run_folder, et_folder, results):
 
     if etsn_success and not libtsndgm_succes:
         results[num_streams][num_et_streams]["etsn_better"] += 1
-        #print(f"etsn better for {top_folder}/{stream_folder}/{run_folder}/{et_folder}")
+        print(f"etsn better for {top_folder}/{stream_folder}/{run_folder}/{et_folder}")
     elif libtsndgm_succes and not etsn_success:
         results[num_streams][num_et_streams]["libtsndgm_better"] += 1
 
@@ -47,9 +45,9 @@ def eval_for_folder(top_folder, stream_folder, run_folder, et_folder, results):
     elif etsn_success and not etsn2_success:
         print("etsn better than etsn2", top_folder, stream_folder, run_folder, et_folder)
 
-    if etsn_success and libtsndgm_succes:
+    if etsn_success and libtsndgm_succes and etsn2_success:
         pass
-        #print(f"both schedulers succeeded for {stream_folder} {et_folder} {run_folder}")
+        # print(f"all schedulers succeeded for {stream_folder} {et_folder} {run_folder}")
 
 def plot_results(results):
     for num_streams, res_now in results.items():
