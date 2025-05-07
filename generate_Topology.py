@@ -125,6 +125,8 @@ def two_porter_line(n):
     # add hosts
     nodes = list(G.nodes)
     for line_node in nodes:
+        if G.degree[line_node] == 2:
+            continue
         node_id = len(G.nodes)
         G.add_node(node_id)
         G.nodes[node_id]['is_switch'] = False

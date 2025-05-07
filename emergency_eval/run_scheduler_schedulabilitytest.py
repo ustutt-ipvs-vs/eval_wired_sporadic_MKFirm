@@ -62,6 +62,7 @@ def run_for_runfolder(top_folder, stream_folder, run_folder):
 
 if __name__ == "__main__":
     for folder in os.listdir(EVAL_PATH):
-        if folder.startswith("t_"):
+        # if folder.startswith("t_"):
+        if folder.startswith("l_"):
             folder = f"{EVAL_PATH}/{folder}"
             run_scheduler_for_topology(folder)

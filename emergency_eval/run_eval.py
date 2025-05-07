@@ -64,7 +64,9 @@ def custom_compare(folder_name1, folder_name2):
         return 0
 
 def compare_results(results_by_folder):
-    sorted_results = collections.OrderedDict(sorted(results_by_folder.items(), key=cmp_to_key(custom_compare)))
+    sorted_results = collections.OrderedDict(sorted(results_by_folder.items(),
+                                                    #key=cmp_to_key(custom_compare))
+                                                    ))
     labels = []
 
     fig1, ax1 = plt.subplots(figsize=(12, 6))
@@ -74,7 +76,7 @@ def compare_results(results_by_folder):
     last_top = None
     last_stream = None
     for folder, result in sorted_results.items():
-        labels.append(folder)
+        labels.append(folder.split("/")[-1])
         streams = result["streams"]
         all_delays_now = []
         all_jitters_now = []
@@ -82,10 +84,14 @@ def compare_results(results_by_folder):
             all_delays_now += stream["delay"][1]
             all_jitters_now += stream["offset_to_expected"]
 
+        print(folder, len(all_delays_now), len(all_jitters_now))
+
         # Remove all zeroes from jitters
         all_jitters_now = [j for j in all_jitters_now if j != 0]
         ax1.boxplot(all_delays_now, positions=[i], showmeans=True, widths=.5, showfliers=False)
+        fig1.suptitle("Delays")
         ax2.boxplot(all_jitters_now, positions=[i], showmeans=True, widths=.5, showfliers=True)
+        fig2.suptitle("Jitters")
 
         top_now = folder.split("/")[0]
         stream_now = folder.split("/")[1]

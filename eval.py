@@ -20,8 +20,10 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 
-def load_csv(output):
+def load_csv(output, run_number=None):
     csv_filename = os.path.join(output, 'output.csv')
+    if run_number is not None:
+        csv_filename = os.path.join(output, f'output-{run_number}.csv')
     df = pd.read_csv(csv_filename)
 
     streams = {}
@@ -101,12 +103,14 @@ def calc_metrics(streams, streams_meta, debug=True):
         "total_min": min([stream["min_delay"] for stream in streams.values()]),
         "total_max": max([stream["max_delay"] for stream in streams.values()]),
         "total_mean": total_sum / total_len,
+        "total_median": np.median(all_delays),
         "total_stddev": np.std(all_delays)
     }
     if debug:
         print(f"Total min: {result['total_min']} "
               f"max: {result['total_max']} "
               f"mean: {result['total_mean']} "
+              f"median: {result['total_median']} "
               f"stddev: {result['total_stddev']} ")
 
     return result
@@ -118,6 +122,7 @@ def check_arrival_delays(streams, streams_meta, debug=True):
         num_frames_per_cycle = len(stream_meta["expected_arrivals"])
         delayed = 0
         too_late = 0
+        too_early = 0
         total = len(stream["delay"][0])
         stream["offset_to_expected"] = []
         for i in range(len(stream["delay"][0])):
@@ -131,16 +136,21 @@ def check_arrival_delays(streams, streams_meta, debug=True):
                 too_late += 1
             if arrival_time != expected_arrival_time:
                 delayed += 1
+            if arrival_time < expected_arrival_time:
+                too_early += 1
             stream["offset_to_expected"].append(arrival_time - expected_arrival_time)
 
         if debug:
-            print_str = f"Stream {stream_meta['id']} has {delayed} of {total} delayed frames (due to emergency frames). ({too_late} too late)"
+            print_str = f"Stream {stream_meta['id']} has {delayed} of {total} delayed frames (due to emergency frames). ({too_late} too late, {too_early} too early)"
             if too_late > 0:
                 print(bcolors.FAIL + print_str + bcolors.ENDC)
+            elif too_early > 0:
+                print(bcolors.OKCYAN + print_str + bcolors.ENDC)
             elif total == 0:
                 print(bcolors.WARNING + print_str + bcolors.ENDC)
             else:
-                print(bcolors.OKGREEN + print_str + bcolors.ENDC)
+                pass
+                # print(bcolors.OKGREEN + print_str + bcolors.ENDC)
 
 
 def eval_results(output, stream_meta_file):
@@ -149,8 +159,8 @@ def eval_results(output, stream_meta_file):
     calc_metrics(streams, streams_meta)
 
 
-def load_eval_files(output, stream_meta_file):
-    streams, emergency_streams = load_csv(output)
+def load_eval_files(output, stream_meta_file, run_number=None):
+    streams, emergency_streams = load_csv(output, run_number)
     streams_meta = load_stream_meta(stream_meta_file)
     return streams, emergency_streams, streams_meta
 

@@ -47,7 +47,7 @@ def eval_for_folder(top_folder, stream_folder, run_folder, et_folder, results):
 
     if etsn_success and libtsndgm_succes and etsn2_success:
         pass
-        # print(f"all schedulers succeeded for {stream_folder} {et_folder} {run_folder}")
+        print(f"all schedulers succeeded for {stream_folder} {et_folder} {run_folder}")
 
 def plot_results(results):
     for num_streams, res_now in results.items():
@@ -81,7 +81,43 @@ def plot_results(results):
         fig2.show()
 
 
-def run_scheduler_for_topology(top_folder):
+def plot_scatter(results):
+    x = []
+    y = []
+    c = []
+    colors = ["red", "blue", "green"]
+
+    for num_tt_streams, res_tt in results.items():
+        for num_et_streams, res in res_tt.items():
+            if res["etsn"] == 0 and res["libtsndgm"] == 0:
+                continue
+
+            x.append(num_tt_streams)
+            y.append(num_et_streams)
+            if res["etsn"] > 0 and res["libtsndgm"] > 0:
+                c.append(colors[2])
+            elif res["etsn"] > 0:
+                c.append(colors[0])
+            elif res["libtsndgm"] > 0:
+                c.append(colors[1])
+
+    fig, ax = plt.subplots(figsize=(12, 6))
+    scatter = ax.scatter(x, y, c=c)
+    ax.set_xlabel("#tt-streams")
+    ax.set_ylabel("#et-streams")
+    ax.set_title("Scatter plot of schedulability results")
+    legend_labels = ["etsn", "libtsndgm", "both"]
+    legend_colors = [colors[0], colors[1], colors[2]]
+    for i, label in enumerate(legend_labels):
+        ax.scatter([], [], c=legend_colors[i], label=label)
+    ax.legend()
+    fig.show()
+
+
+
+
+
+def eval_for_top(top_folder):
     results = {}
     for stream_folder in os.listdir(top_folder):
         if stream_folder.startswith("p_"):
@@ -90,12 +126,12 @@ def run_scheduler_for_topology(top_folder):
                     for et_folder in os.listdir(f"{top_folder}/{stream_folder}/{run_folder}"):
                         if et_folder.startswith("et_"):
                             eval_for_folder(top_folder, stream_folder, run_folder, et_folder, results)
-    print(results)
     plot_results(results)
+    # plot_scatter(results)
 
 
 if __name__ == "__main__":
     for folder in os.listdir(EVAL_PATH):
         if folder.startswith("t_"):
             folder = os.path.join(EVAL_PATH, folder)
-            run_scheduler_for_topology(folder)
+            eval_for_top(folder)

@@ -15,7 +15,7 @@ from network import network_graph
 ##########
 # topology
 ##########
-def main(topology, config, output, tt_streams=None):
+def main(topology, config, output, tt_streams=None, force_host=None):
     if not os.path.isfile(topology):
         raise FileNotFoundError
     topology = network_graph.NetworkGraph(topology)
@@ -38,7 +38,7 @@ def main(topology, config, output, tt_streams=None):
     emergency_streams = []
     if random_et_streams:
         for i in range(0, number_of_streams):
-            emergency_streams.append(create_random_emergency_stream(i, topology, frame_sizes_byte, min_inter_event_times_us))
+            emergency_streams.append(create_random_emergency_stream(i, topology, frame_sizes_byte, min_inter_event_times_us, force_host))
     else:
         emergency_streams = create_emergency_streams_based_on_tt_streams(topology, tt_streams, number_of_streams)
 
@@ -47,13 +47,16 @@ def main(topology, config, output, tt_streams=None):
 
 
 
-def get_random_source_and_target(device_ids) -> Tuple[int, int]:
-    source = random.choice(device_ids)
+def get_random_source_and_target(device_ids, force_host=None) -> Tuple[int, int]:
+    if force_host is not None:
+        source = force_host
+    else:
+        source = random.choice(device_ids)
     target = random.choice([d_id for d_id in device_ids if d_id != source])
     return source, target
 
 
-def create_random_emergency_stream(stream_id: int, topology, frame_sizes_byte, min_inter_event_times_us):
+def create_random_emergency_stream(stream_id: int, topology, frame_sizes_byte, min_inter_event_times_us, force_host=None) -> dict:
     et_stream = EtStream(stream_id)
 
     frame_size = random.choice(frame_sizes_byte)
@@ -61,7 +64,7 @@ def create_random_emergency_stream(stream_id: int, topology, frame_sizes_byte, m
     et_stream.set_and_calculate_bucket_attributes(frame_size, min_inter_event_time_ns)
 
     device_ids: List[int] = topology.get_end_device_ids()
-    source, target = get_random_source_and_target(device_ids)
+    source, target = get_random_source_and_target(device_ids, force_host)
     et_stream.set_and_calculate_route(source, target, topology)
 
     return et_stream.to_json()

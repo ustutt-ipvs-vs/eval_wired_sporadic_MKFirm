@@ -12,7 +12,7 @@ from network.Routing import calc_nowait_e2e_delay, get_dijkstra_shortest_path
 from network.network_graph import NetworkGraph
 
 
-def main(topology, config, output):
+def main(topology, config, output, force_host=None):
     number_of_streams: int = int(config.get('generic', 'number_of_tt_streams'))
     periods_ns: List[int] = [period_us * 1000 for period_us in json.loads(config.get('generic', 'periods_in_us'))]
     frame_sizes_in_byte: List[int] = json.loads(config.get('generic', 'frame_sizes_in_byte'))
@@ -28,13 +28,16 @@ def main(topology, config, output):
     hosts: List[int] = topology.get_end_device_ids()
 
 
-    def generate_stream(stream_id):
+    def generate_stream(stream_id, force_host=None):
         stream = TtStream(stream_id)
         # todo consider enforcing a maximum frame size (i.e. MTU)
         stream.frame_size_byte = max(64, random.choice(frame_sizes_in_byte))
         stream.cycle_time_ns = random.choice(periods_ns)
 
-        stream.source = random.choice(hosts)
+        if force_host is not None:
+            stream.source = force_host
+        else:
+            stream.source = random.choice(hosts)
         stream.target = random.choice([n for n in hosts if n != stream.source])
 
         stream.et_capable = random.random() < et_capable_portion
@@ -65,7 +68,7 @@ def main(topology, config, output):
     #############
     streams = []
     for new_stream_id in range(first_stream_id, first_stream_id + number_of_streams):
-        streams.append(generate_stream(new_stream_id))
+        streams.append(generate_stream(new_stream_id, force_host))
 
     with open(output, 'w') as f_output:
         json.dump([s.to_json() for s in streams], f_output, indent=4)
