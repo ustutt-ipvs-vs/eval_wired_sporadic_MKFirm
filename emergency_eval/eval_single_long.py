@@ -3,7 +3,7 @@ import os
 import pickle
 
 from emergency_eval.run_eval import compare_results
-from emergency_eval.settings import EVAL_PATH
+from emergency_eval.settings import EVAL_PATH_SIM
 from eval import extract_data, load_eval_files, check_arrival_delays, calc_metrics
 
 
@@ -20,9 +20,18 @@ def eval_for_path_with_run(path, run_num, results, results_merged):
         }
     else:
         for port, stream in streams.items():
+            intended_len = len(stream['delay'][0])
+            if len(stream['delay'][0]) != intended_len:
+                print(f"Error: {folder} {port} stream['delay'][0] {len(stream['delay'][0])} != {intended_len}")
+            if len(stream['delay'][1]) != intended_len:
+                print(f"Error: {folder} {port} stream['delay'][1] {len(stream['delay'][1])} != {intended_len}")
+            if len(stream['offset_to_expected']) != intended_len:
+                print(
+                    f"Error: {folder} {port} stream['offset_to_expected'][0] {len(stream['offset_to_expected'][0])} != {intended_len}")
+
             results_merged[path]["streams"][port]['delay'][0] += stream['delay'][0]
             results_merged[path]["streams"][port]['delay'][1] += stream['delay'][1]
-            results_merged[path]["streams"][port]['offset_to_expected'][0] += stream['offset_to_expected'][0]
+            results_merged[path]["streams"][port]['offset_to_expected'] += stream['offset_to_expected']
 
     metrics = calc_metrics(streams, streams_meta, False)
 
@@ -39,9 +48,9 @@ def eval_for_path_with_run(path, run_num, results, results_merged):
 
 
 if __name__ == "__main__":
-    top_folder = os.path.join(EVAL_PATH, "t_3x4")
-    run_folder = os.path.join(top_folder, "p_24/r_76/")
-    scenario_folder = os.path.join(run_folder, "et_18")
+    top_folder = os.path.join(EVAL_PATH_SIM, "t_3x4")
+    run_folder = os.path.join(top_folder, "p_24/r_9/")
+    scenario_folder = os.path.join(run_folder, "et_24")
 
     et_out = f"{scenario_folder}/etsn"
     et_out_2 = f"{scenario_folder}/etsn2"
@@ -60,20 +69,11 @@ if __name__ == "__main__":
     results_merged = {}
 
     if not os.path.exists(result_file):
-        for i in range(3):
+        for i in range(200):
             for folder in eval_folders:
                 eval_for_path_with_run(folder, i, results, results_merged)
 
         for folder in eval_folders:
-            # Sanity check
-            for port, stream in results_merged[folder]["streams"].items():
-                intended_len = stream['delay'][0]
-                if stream['delay'][0] != intended_len:
-                    print(f"Error: {folder} {port} {stream['delay'][0]} != {intended_len}")
-                if stream['delay'][1] != intended_len:
-                    print(f"Error: {folder} {port} {stream['delay'][1]} != {intended_len}")
-                if stream['offset_to_expected'] != 0:
-                    print(f"Error: {folder} {port} {stream['offset_to_expected'][0]} != 0")
             metrics = calc_metrics(results_merged[folder]["streams"], results_merged[folder]["streams_meta"], True)
             results_merged[folder]["metrics"] = metrics
 
@@ -83,8 +83,21 @@ if __name__ == "__main__":
         with open(result_file_merged, "wb") as f:
             pickle.dump(results_merged, f)
     else:
+        # with open(result_file, "rb") as f:
+            # results = pickle.load(f)
         with open(result_file_merged, "rb") as f:
             results_merged = pickle.load(f)
+
+    for folder in eval_folders:
+        # Sanity check
+        for port, stream in results_merged[folder]["streams"].items():
+            intended_len = len(stream['delay'][0])
+            if len(stream['delay'][0]) != intended_len:
+                print(f"Error: {folder} {port} stream['delay'][0] {len(stream['delay'][0])} != {intended_len}")
+            if len(stream['delay'][1]) != intended_len:
+                print(f"Error: {folder} {port} stream['delay'][1] {len(stream['delay'][1])} != {intended_len}")
+            if len(stream['offset_to_expected']) != intended_len:
+                print(f"Error: {folder} {port} stream['offset_to_expected'][0] {len(stream['offset_to_expected'][0])} != {intended_len}")
 
     compare_results(results_merged)
 

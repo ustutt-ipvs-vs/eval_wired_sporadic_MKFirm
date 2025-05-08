@@ -84,7 +84,7 @@ def compare_results(results_by_folder):
             all_delays_now += stream["delay"][1]
             all_jitters_now += stream["offset_to_expected"]
 
-        print(folder, len(all_delays_now), len(all_jitters_now))
+        # print(folder, len(all_delays_now), len(all_jitters_now))
 
         # Remove all zeroes from jitters
         all_jitters_now = [j for j in all_jitters_now if j != 0]

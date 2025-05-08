@@ -146,8 +146,12 @@ def generate_network(topology, output):
 
 ini_base = '''[General]
 network = "EmergencyNetwork"
-sim-time-limit = 2s
+sim-time-limit = 10s
 repeat = {repeat}
+
+**.meanBitLifeTimePerPacket:vector.vector-recording = true
+**.vector-recording = false
+
 
 **.hasEgressTrafficShaping = true
 
