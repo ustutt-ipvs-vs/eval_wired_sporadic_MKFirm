@@ -4,6 +4,7 @@ import os
 from functools import cmp_to_key
 
 from matplotlib import pyplot as plt
+from matplotlib.ticker import FuncFormatter
 
 from eval import extract_data, eval_results, load_eval_files, check_arrival_delays, calc_metrics
 
@@ -63,62 +64,75 @@ def custom_compare(folder_name1, folder_name2):
     else:
         return 0
 
-def compare_results(results_by_folder):
+def compare_results(results_by_folder, group_by_cycle=False):
     sorted_results = collections.OrderedDict(sorted(results_by_folder.items(),
                                                     #key=cmp_to_key(custom_compare))
                                                     ))
-    labels = []
 
-    fig1, ax1 = plt.subplots(figsize=(12, 6))
-    fig2, ax2 = plt.subplots(figsize=(12, 6))
-    i=0
+    delays = {}
+    jitters = {}
+    labels_delay = []
+    labels_jitter = []
 
-    last_top = None
-    last_stream = None
-    for folder, result in sorted_results.items():
-        labels.append(folder.split("/")[-1])
+    for folder, result in results_by_folder.items():
+        e_streams = result["emergency_streams"]
+        for port, stream in e_streams.items():
+            # Get cycle time from streams_meta
+            key = f"{folder}_sporadic"
+            if key not in delays:
+                delays[key] = []
+                label = f"sporadic\n{folder.split('/')[-1]}"
+                labels_delay.append(label)
+            delays[key].extend(stream["delay"][1])
+
         streams = result["streams"]
-        all_delays_now = []
-        all_jitters_now = []
+        streams_meta = result["streams_meta"]
         for port, stream in streams.items():
-            all_delays_now += stream["delay"][1]
-            all_jitters_now += stream["offset_to_expected"]
+            # Get cycle time from streams_meta
+            meta = streams_meta[port]
+            cycle_time = meta["cycle_time"]
+            key = f"{folder}_{cycle_time}"
+            if key not in delays:
+                delays[key] = []
+                jitters[key] = []
+                label = f"time-triggered\nperiod={cycle_time//1000}us\n{folder.split('/')[-1]}"
+                labels_delay.append(label)
+                labels_jitter.append(label)
+            delays[key].extend(stream["delay"][1])
+            jitters[key].extend([j for j in stream["offset_to_expected"] if j != 0])
 
-        # print(folder, len(all_delays_now), len(all_jitters_now))
+    def seconds_to_microseconds(x, pos):
+        return f"{x * 1e6:.0f}"  # Or use .1f if you want decimals
 
-        # Remove all zeroes from jitters
-        all_jitters_now = [j for j in all_jitters_now if j != 0]
-        ax1.boxplot(all_delays_now, positions=[i], showmeans=True, widths=.5, showfliers=False)
-        fig1.suptitle("Delays")
-        ax2.boxplot(all_jitters_now, positions=[i], showmeans=True, widths=.5, showfliers=True)
-        fig2.suptitle("Jitters")
+    def nanos_to_microseconds(x, pos):
+        return f"{x / 1000:.0f}"
 
-        top_now = folder.split("/")[0]
-        stream_now = folder.split("/")[1]
-        if top_now != last_top and last_top is not None:
-            # Plot axvline
-            ax1.axvline(x=i-.5, color='black', linestyle='--', linewidth=1)
-            ax2.axvline(x=i-.5, color='black', linestyle='--', linewidth=1)
-        elif stream_now != last_stream and last_stream is not None:
-            ax1.axvline(x=i-.5, color='black', linestyle='--', linewidth=0.5)
-            ax2.axvline(x=i-.5, color='black', linestyle='--', linewidth=0.5)
-
-        last_stream = stream_now
-        last_top = top_now
-
-        i += 1
-
-
-    ax1.set_xticklabels(labels)
-    fig1.autofmt_xdate(rotation=90)
-
-    ax2.set_xticklabels(labels)
-    #ax2.set_ylim(top=5)
-    fig2.autofmt_xdate(rotation=90)
-
+    # Plot delays
+    fig1, ax1 = plt.subplots()
+    ax1.boxplot(delays.values(), positions=range(len(labels_delay)), showmeans=True, widths=.5, showfliers=True, notch=True)
+    ax1.set_xticks(range(len(labels_delay)))
+    ax1.set_xticklabels(labels_delay)
+    ax1.yaxis.set_major_formatter(FuncFormatter(seconds_to_microseconds))
+    ax1.set_ylabel("delay [µs]")
     fig1.tight_layout()
+
+    # Plot jitters
+    fig2, ax2 = plt.subplots()
+    ax2.boxplot(jitters.values(), positions=range(len(labels_jitter)), showmeans=True, widths=.5, showfliers=True, notch=True)
+    ax2.set_xticks(range(len(labels_jitter)))
+    ax2.set_xticklabels(labels_jitter)
+    ax2.yaxis.set_major_formatter(FuncFormatter(nanos_to_microseconds))
+    ax2.set_ylabel("offset to expected [µs]")
     fig2.tight_layout()
     plt.show()
+
+    # # Export results to json
+    # with open("results.json", "w+") as f:
+    #     to_dump = {
+    #         "delays": delays,
+    #         "jitters": jitters,
+    #     }
+    #     json.dump(to_dump, f)
 
 
 def scheduleability_analysis(results_by_folder):

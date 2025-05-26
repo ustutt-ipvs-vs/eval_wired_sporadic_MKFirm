@@ -370,7 +370,7 @@ def calc_cycle_time(streams):
     return math.lcm(*periods)
 
 
-def parse_transmission_output(transmission_path, devices, streams, gclcalc):
+def parse_transmission_output(transmission_path, devices, streams, gclcalc, ignore_highest_pcp=False):
     # Read json
     with open(transmission_path, "r") as f:
         transmission_array = json.load(f)
@@ -440,6 +440,8 @@ def parse_transmission_output(transmission_path, devices, streams, gclcalc):
                     }
                 }
                 for pcp, gcl in pcps.items():
+                    if ignore_highest_pcp and pcp == highest_queue:
+                        continue
                     calc_gcl(gcls[device][target], gcl, pcp, cycle_time, streams, device, target)
         return gcls
     return None
@@ -635,7 +637,7 @@ def generate_stream_meta(topology, streams, devices, output):
     with open(os.path.join(output, "stream_meta.json"), "w") as f:
         json.dump(stream_meta, f, indent=4)
 
-def generate_scenario(a_topology, a_streams, a_emergency_streams, a_transmission, a_gcl, a_output, repeat=1):
+def generate_scenario(a_topology, a_streams, a_emergency_streams, a_transmission, a_gcl, a_output, repeat=1, ignore_highest_pcp=False):
     topology = parse_topology(a_topology)
     streams = parse_streams(topology, a_streams)
     e_streams = parse_emergency_streams(a_emergency_streams)
@@ -649,7 +651,7 @@ def generate_scenario(a_topology, a_streams, a_emergency_streams, a_transmission
         pass
     else:
         # E-TSN approach (use transmission output from E-TSN scheduler)
-        gcls = parse_transmission_output(a_transmission, devices, streams, True)
+        gcls = parse_transmission_output(a_transmission, devices, streams, True, ignore_highest_pcp)
         pass
 
     add_route_to_emergency_streams(e_streams, devices)

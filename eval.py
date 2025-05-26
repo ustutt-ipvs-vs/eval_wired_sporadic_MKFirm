@@ -63,6 +63,20 @@ def load_csv(output, run_number=None):
                 list(map(float, delay_df['vectime'].item().split(" "))),
                 list(map(float, delay_df['vecvalue'].item().split(" "))),
             ]
+
+    for port, stream in emergency_streams.items():
+        delay_df = df[
+            (df['module'] == stream['sink']) & (df['name'] == 'meanBitLifeTimePerPacket:vector') & (
+                    df['type'] == 'vector')]
+
+        if not delay_df['vectime'].any():
+            stream["delay"] = [[], []]
+        else:
+            stream["delay"] = [
+                list(map(float, delay_df['vectime'].item().split(" "))),
+                list(map(float, delay_df['vecvalue'].item().split(" "))),
+            ]
+
     return streams, emergency_streams
 
 
@@ -150,7 +164,7 @@ def check_arrival_delays(streams, streams_meta, debug=True):
                 print(bcolors.WARNING + print_str + bcolors.ENDC)
             else:
                 pass
-                # print(bcolors.OKGREEN + print_str + bcolors.ENDC)
+                print(bcolors.OKGREEN + print_str + bcolors.ENDC)
 
 
 def eval_results(output, stream_meta_file):

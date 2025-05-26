@@ -14,7 +14,7 @@ if __name__ == "__main__":
     run_folder = os.path.join(top_folder, run_name)
     scenario_folder = os.path.join(run_folder, et_name)
 
-    repeat = 200
+    repeat = 100
 
     et_out = f"{EVAL_PATH_SIM}/{top_name}/{run_name}/{et_name}/etsn"
     generate_scenario(f"{top_folder}/topology.json", f"{run_folder}/streams.json",
@@ -22,7 +22,8 @@ if __name__ == "__main__":
                       f"{scenario_folder}/etsn_out.json",
                       None,
                       et_out,
-                      repeat)
+                      repeat,
+                      ignore_highest_pcp=True)
 
     # et2
     et_out_2 = f"{EVAL_PATH_SIM}/{top_name}/{run_name}/{et_name}/etsn2"
@@ -31,7 +32,8 @@ if __name__ == "__main__":
                       f"{scenario_folder}/etsn2_out.json",
                       None,
                       et_out_2,
-                      repeat)
+                      repeat,
+                      ignore_highest_pcp=True)
 
     lib_out = f"{EVAL_PATH_SIM}/{top_name}/{run_name}/{et_name}/libtsndgm"
     generate_scenario(f"{top_folder}/topology.json", f"{run_folder}/streams.json",

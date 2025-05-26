@@ -33,6 +33,13 @@ def eval_for_path_with_run(path, run_num, results, results_merged):
             results_merged[path]["streams"][port]['delay'][1] += stream['delay'][1]
             results_merged[path]["streams"][port]['offset_to_expected'] += stream['offset_to_expected']
 
+        for port, emergency_stream in emergency_streams.items():
+            if port not in results_merged[path]["emergency_streams"]:
+                results_merged[path]["emergency_streams"][port] = emergency_stream
+            else:
+                results_merged[path]["emergency_streams"][port]['delay'][0] += emergency_stream['delay'][0]
+                results_merged[path]["emergency_streams"][port]['delay'][1] += emergency_stream['delay'][1]
+
     metrics = calc_metrics(streams, streams_meta, False)
 
     if path not in results:
@@ -58,7 +65,7 @@ if __name__ == "__main__":
 
     eval_folders = [
         et_out,
-        et_out_2,
+        # et_out_2,
         lib_out
     ]
 
@@ -69,7 +76,7 @@ if __name__ == "__main__":
     results_merged = {}
 
     if not os.path.exists(result_file):
-        for i in range(200):
+        for i in range(100):
             for folder in eval_folders:
                 eval_for_path_with_run(folder, i, results, results_merged)
 
@@ -89,6 +96,7 @@ if __name__ == "__main__":
             results_merged = pickle.load(f)
 
     for folder in eval_folders:
+        print(folder, results_merged[folder]["metrics"])
         # Sanity check
         for port, stream in results_merged[folder]["streams"].items():
             intended_len = len(stream['delay'][0])
@@ -99,6 +107,7 @@ if __name__ == "__main__":
             if len(stream['offset_to_expected']) != intended_len:
                 print(f"Error: {folder} {port} stream['offset_to_expected'][0] {len(stream['offset_to_expected'][0])} != {intended_len}")
 
-    compare_results(results_merged)
+    compare_results(results_merged,
+                    group_by_cycle=True)
 
 
