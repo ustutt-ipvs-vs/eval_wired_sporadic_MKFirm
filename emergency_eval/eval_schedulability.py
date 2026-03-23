@@ -51,23 +51,34 @@ def eval_for_folder(top_folder, stream_folder, run_folder, et_folder, results):
 
 def plot_results(results):
     for num_streams, res_now in results.items():
+        if num_streams != 24:
+            continue
+
+        # Export as json
+        import json
+        with open(f"results_{num_streams}.json", "w") as f:
+            json.dump(dict(sorted(res_now.items())), f, indent=4)
+
         res_now_sorted = sorted(res_now)
 
-        fig, ax = plt.subplots(figsize=(12, 6))
+        fig, ax = plt.subplots()
         x = [x for x in res_now_sorted]
         y1 = [res_now[x]["etsn"] for x in res_now_sorted]
         y2 = [res_now[x]["libtsndgm"] for x in res_now_sorted]
         y3 = [res_now[x]["etsn2"] for x in res_now_sorted]
         ax.plot(x, y1, label="etsn")
         ax.plot(x, y2, label="libtsndgm")
-        ax.plot(x, y3, label="etsn2")
-        fig.suptitle(f"#tt-streams: {num_streams}")
+        # ax.plot(x, y3, label="etsn2")
+        # fig.suptitle(f"#tt-streams: {num_streams}")
         ax.legend()
-        ax.set_xlabel(f"#et streams")
+        ax.set_xlabel(f"#sporadic streams")
         ax.set_ylabel(f"#Streamset Scheduled")
+        ax.set_xlim(0, 34)
+        fig.tight_layout()
         fig.show()
 
-        fig2, ax2 = plt.subplots(figsize=(12, 6))
+
+        fig2, ax2 = plt.subplots()
         y1 = [res_now[x]["etsn_better"] for x in res_now_sorted]
         y2 = [res_now[x]["libtsndgm_better"] for x in res_now_sorted]
         # Plot as bar charts
