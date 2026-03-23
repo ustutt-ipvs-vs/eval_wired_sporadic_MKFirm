@@ -1,6 +1,6 @@
 import os
 
-EVAL_PATH_SCHED = "/home/haugls/mnt_scratch/taurus/haugls2/emergency"
+EVAL_PATH_SCHED = "/scratch/haugls2/emergency/"
 EVAL_PATH_SIM = "/scratch/haugls2/emergency2"
 
 cplex_path = "/home/haugls/cplex/cpoptimizer/bin/x86-64_linux/cpoptimizer"
