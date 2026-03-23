@@ -2,7 +2,9 @@ import os
 
 import pickle
 
-from emergency_eval.run_eval import compare_results
+import numpy as np
+
+from emergency_eval.run_eval import compare_results, compare_results_single_stream
 from emergency_eval.settings import EVAL_PATH_SIM
 from eval import extract_data, load_eval_files, check_arrival_delays, calc_metrics
 
@@ -53,6 +55,29 @@ def eval_for_path_with_run(path, run_num, results, results_merged):
     }
 
 
+def single_streams(results_merged):
+    # Compare results
+    import pandas as pd
+    df = pd.DataFrame()
+    # Add column names without content
+    df = df.reindex(
+        columns=["scheduler", "type", "stream", "lower_whisker", "lower_quartile", "median", "mean", "upper_quartile",
+                 "upper_whisker", "outliers"])
+    for folder, folder_data in results_merged.items():
+        folder_name = os.path.basename(folder)
+        for stream_name, stream_data in folder_data["streams"].items():
+            # Add stream data to DataFrame
+            df = df.append({
+                "scheduler": folder_name,
+                "type": "tt",
+                "stream": stream_name,
+                "delays": stream_data['delay'][1],
+            }, ignore_index=True)
+            pass
+        for emergency_stream_name, emergency_stream_data in folder_data["emergency_streams"].items():
+          pass
+        pass
+
 
 if __name__ == "__main__":
     top_folder = os.path.join(EVAL_PATH_SIM, "t_3x4")
@@ -76,6 +101,8 @@ if __name__ == "__main__":
     results_merged = {}
 
     if not os.path.exists(result_file):
+        print("Should not be here!")
+        raise Exception("Should not be here!")
         for i in range(100):
             for folder in eval_folders:
                 eval_for_path_with_run(folder, i, results, results_merged)
@@ -107,7 +134,12 @@ if __name__ == "__main__":
             if len(stream['offset_to_expected']) != intended_len:
                 print(f"Error: {folder} {port} stream['offset_to_expected'][0] {len(stream['offset_to_expected'][0])} != {intended_len}")
 
-    compare_results(results_merged,
-                    group_by_cycle=True)
+    # single_streams(results_merged)
+
+    # compare_results(results_merged,
+    #                 group_by_cycle=True)
+
+    compare_results_single_stream(results_merged)
+
 
 
