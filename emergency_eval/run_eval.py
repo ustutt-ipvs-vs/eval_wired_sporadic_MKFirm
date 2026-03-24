@@ -1,7 +1,5 @@
 import collections
 import json
-import os
-from functools import cmp_to_key
 
 import natsort
 import numpy as np
@@ -9,63 +7,6 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.ticker import FuncFormatter
 
-from eval import extract_data, eval_results, load_eval_files, check_arrival_delays, calc_metrics
-
-
-def do_eval(run_folder, results):
-    if not os.path.isdir(run_folder):
-        return
-
-    # Load num tt and et streams from streams.json and streams_et.json
-    streams_file = f"{run_folder}/streams.json"
-    streams_et_file = f"{run_folder}/streams_et.json"
-    if not os.path.exists(streams_file) or not os.path.exists(streams_et_file):
-        print(f"Skipping {run_folder}, no streams.json or streams_et.json")
-        return
-    with open(streams_file, "r") as f:
-        streams = json.load(f)
-    with open(streams_et_file, "r") as f:
-        streams_et = json.load(f)
-    num_streams = {"tt": len(streams), "et": len(streams_et)}
-
-    schedulers = ["etsn", "libtsndgm"]
-    for scheduler in schedulers:
-        scheduler_out = f"{run_folder}/{scheduler}_out.json"
-        scheduler_folder = f"{run_folder}/{scheduler}"
-        if not os.path.exists(scheduler_out):
-            results[scheduler_folder] = {
-                "scheduled": False,
-                "num_streams": num_streams,
-            }
-            continue
-
-        extract_data(scheduler_folder)
-        streams, emergency_streams, streams_meta = load_eval_files(scheduler_folder, f"{scheduler_folder}/stream_meta.json")
-        check_arrival_delays(streams, streams_meta, False)
-
-        results[scheduler_folder] = {
-            "scheduled": True,
-            "streams": streams,
-            "metrics": calc_metrics(streams, streams_meta),
-            "num_streams": num_streams,
-        }
-        pass
-
-def custom_compare(folder_name1, folder_name2):
-    # Implement your custom comparison logic here
-    split1 = folder_name1[0].split("/")
-    split2 = folder_name2[0].split("/")
-
-    run1 = float(split1[2].split("_")[-1])
-    run2 = float(split2[2].split("_")[-1])
-    if split1[0] == split2[0] and split1[1] == split2[1] and run1 != run2:
-        return run1 - run2
-    elif split1 < split2:
-        return -1
-    elif split1 > split2:
-        return 1
-    else:
-        return 0
 
 def compare_results(results_by_folder, group_by_cycle=False):
     sorted_results = collections.OrderedDict(sorted(results_by_folder.items(),
@@ -187,11 +128,11 @@ def compare_results_single_stream(results_by_folder):
             delays_unsorted[key] = (stream["delay"][1])
             jitters_unsorted[key] = [j for j in stream["offset_to_expected"] if j != 0]
 
-    def seconds_to_microseconds(x, pos):
-        return f"{x * 1e6:.0f}"  # Or use .1f if you want decimals
+    def seconds_to_microseconds(x, pos=None):
+        return f"{x * 1e6:.3f}"
 
-    def nanos_to_microseconds(x, pos):
-        return f"{x / 1000:.0f}"
+    def nanos_to_microseconds(x, pos=None):
+        return f"{x / 1000:.3f}"
 
 
     # Sort delays and jitters using natsort
@@ -211,6 +152,10 @@ def compare_results_single_stream(results_by_folder):
     print(data_delay)
     rows_delay = []
     print("Delays")
+
+    max_delays = {}
+    max_jitters = {}
+
     for i in range(len(delays)):
         key = list(delays.keys())[i]
         box = data_delay["boxes"][i].get_ydata()[1:3]
@@ -218,7 +163,13 @@ def compare_results_single_stream(results_by_folder):
         caps = [data_delay["caps"][i * 2].get_ydata()[1], data_delay["caps"][i * 2 + 1].get_ydata()[1]]
         fliers = data_delay["fliers"][i].get_ydata().tolist()
         means = data_delay["means"][i].get_ydata()[0]
-        print(key, max(max(fliers, default=0), max(caps)))
+        # print(key, max(max(fliers, default=0), max(caps)))
+
+        key_split = key.split("_")
+        delay_category = "_".join(key_split[0:2])
+        if delay_category not in max_delays:
+            max_delays[delay_category] = {}
+        max_delays[delay_category][key_split[2]] = (max(max(fliers, default=0), max(caps)))
 
         rows_delay.append({
             "key": key,
@@ -252,7 +203,11 @@ def compare_results_single_stream(results_by_folder):
         fliers = data_jitter["fliers"][i].get_ydata().tolist()
         means = data_jitter["means"][i].get_ydata()[0]
 
-        print(key, max(max(fliers, default=0), max(caps)))
+        key_split = key.split("_")
+        delay_category = "_".join(key_split[0:2])
+        if delay_category not in max_jitters:
+            max_jitters[delay_category] = {}
+        max_jitters[delay_category][key_split[2]] = (max(max(fliers, default=0), max(caps)))
 
         rows_jitter.append({
             "key": key,
@@ -267,86 +222,28 @@ def compare_results_single_stream(results_by_folder):
 
 
 
+    for delay_category in max_delays:
+        print("###", delay_category)
+        highest_delay = 0
+        highest_delay_key = None
 
-def scheduleability_analysis(results_by_folder):
-    # Plot schedulability for etsn and libtsndgm per streamnumber
-    by_num_total_streams = {}
-    by_num_tt_streams = {}
-    by_num_et_streams = {}
-    by_et_stream_ratio = {}
-    for folder, result in results_by_folder.items():
-        num_streams = result["num_streams"]
-        num_total_streams = sum(num_streams.values())
-        et_stream_ratio = round(num_streams["et"] / num_streams["tt"] * 2) / 2
-        if num_total_streams not in by_num_total_streams:
-            by_num_total_streams[num_total_streams] = {
-                "etsn": 0,
-                "libtsndgm": 0,
-            }
-        if num_streams["tt"] not in by_num_tt_streams:
-            by_num_tt_streams[num_streams["tt"]] = {
-                "etsn": 0,
-                "libtsndgm": 0,
-            }
-        if num_streams["et"] not in by_num_et_streams:
-            by_num_et_streams[num_streams["et"]] = {
-                "etsn": 0,
-                "libtsndgm": 0,
-            }
-        if et_stream_ratio not in by_et_stream_ratio:
-            by_et_stream_ratio[et_stream_ratio] = {
-                "etsn": 0,
-                "libtsndgm": 0,
-            }
+        highest_jitter = 0
+        highest_jitter_key = None
+        for port in max_delays[delay_category]:
+            print(f"{port}: max delay = {max_delays[delay_category][port]}", end="")
 
-        if result["scheduled"]:
-            by_num_total_streams[num_total_streams][folder.split("/")[-1]] += 1
-            by_num_tt_streams[num_streams["tt"]][folder.split("/")[-1]] += 1
-            by_num_et_streams[num_streams["et"]][folder.split("/")[-1]] += 1
-            by_et_stream_ratio[et_stream_ratio][folder.split("/")[-1]] += 1
+            if max_delays[delay_category][port] > highest_delay:
+                highest_delay = max_delays[delay_category][port]
+                highest_delay_key = port
 
-    for name, array_now in {"total": by_num_total_streams,
-                            "tt": by_num_tt_streams,
-                            "et": by_num_et_streams,
-                            "ratio": by_et_stream_ratio}.items():
-        # Sort by num_total_streams
-        sorted_by_num_streams = collections.OrderedDict(sorted(array_now.items()))
-        x = []
-        y_etsn = []
-        y_libtsndgm = []
-        for num_streams, result in sorted_by_num_streams.items():
-            x.append(num_streams)
-            y_etsn.append(result["etsn"])
-            y_libtsndgm.append(result["libtsndgm"])
+            if delay_category in max_jitters:
+                print(f", max jitter = {max_jitters[delay_category][port]}")
 
-        width = 0.4
-        if name == "ratio":
-            width = 0.2
+                if max_jitters[delay_category][port] > highest_jitter:
+                    highest_jitter = max_jitters[delay_category][port]
+                    highest_jitter_key = port
+            else:
+                print()
 
-        fig, ax = plt.subplots(figsize=(12, 6))
-        ax.bar([i - (width / 2) for i in x], y_etsn, label="etsn", width=width)
-        ax.bar([i + (width / 2)for i in x], y_libtsndgm, label="libtsndgm", width=width)
-        ax.set_xlabel(f"Number of {name} streams")
-        ax.set_ylabel("Number of successful runs")
-        ax.legend()
-        plt.show()
-
-
-
-if __name__ == "__main__":
-    results_by_folder = {}
-
-    # Beautiful code <3
-    for top_folder in os.listdir("."):
-        if top_folder.startswith("t_"):
-            for stream_folder in os.listdir(top_folder):
-                if stream_folder.startswith("s_"):
-                    for run_folder in os.listdir(f"{top_folder}/{stream_folder}"):
-                        if run_folder.startswith("r_"):
-                            run_folder_full = f"{top_folder}/{stream_folder}/{run_folder}"
-                            result = do_eval(run_folder_full, results_by_folder)
-
-
-    # json.dump(results_by_folder, open("results.json", "w+"))
-    scheduleability_analysis(results_by_folder)
-    compare_results(results_by_folder)
+        print(f"Highest delay: {highest_delay} in {delay_category}_{highest_delay_key}")
+        print(f"Highest jitter: {highest_jitter} in {delay_category}_{highest_jitter_key}")

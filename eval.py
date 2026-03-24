@@ -130,14 +130,14 @@ def calc_metrics(streams, streams_meta, debug=True):
     return result
 
 
-def check_arrival_delays(streams, streams_meta, debug=True):
+def calc_offset_to_expected(streams, streams_meta):
     for port, stream in streams.items():
         stream_meta = streams_meta[port]
         num_frames_per_cycle = len(stream_meta["expected_arrivals"])
         delayed = 0
         too_late = 0
         too_early = 0
-        total = len(stream["delay"][0])
+
         stream["offset_to_expected"] = []
         for i in range(len(stream["delay"][0])):
             frame = i % num_frames_per_cycle
@@ -154,23 +154,24 @@ def check_arrival_delays(streams, streams_meta, debug=True):
                 too_early += 1
             stream["offset_to_expected"].append(arrival_time - expected_arrival_time)
 
-        if debug:
-            print_str = f"Stream {stream_meta['id']} has {delayed} of {total} delayed frames (due to emergency frames). ({too_late} too late, {too_early} too early)"
-            if too_late > 0:
-                print(bcolors.FAIL + print_str + bcolors.ENDC)
-            elif too_early > 0:
-                print(bcolors.OKCYAN + print_str + bcolors.ENDC)
-            elif total == 0:
-                print(bcolors.WARNING + print_str + bcolors.ENDC)
-            else:
-                pass
-                print(bcolors.OKGREEN + print_str + bcolors.ENDC)
+        stream["too_early"] = too_early
+        stream["too_late"] = too_late
+        stream["delayed"] = delayed
 
 
-def eval_results(output, stream_meta_file):
-    streams, emergency_streams, streams_meta = load_eval_files(output, stream_meta_file)
-    check_arrival_delays(streams, streams_meta)
-    calc_metrics(streams, streams_meta)
+def check_arrival_times(streams):
+    for port, stream in streams.items():
+        total = len(stream["delay"][0])
+        print_str = f"Stream {port} has {stream['delayed']} of {total} delayed frames (due to emergency frames). ({stream['too_late']} too late, {stream['too_early']} too early)"
+        if stream['too_late'] > 0:
+            print(bcolors.FAIL + print_str + bcolors.ENDC)
+        elif stream['too_early'] > 0:
+            print(bcolors.OKCYAN + print_str + bcolors.ENDC)
+        elif total == 0:
+            print(bcolors.WARNING + print_str + bcolors.ENDC)
+        else:
+            pass
+            print(bcolors.OKGREEN + print_str + bcolors.ENDC)
 
 
 def load_eval_files(output, stream_meta_file, run_number=None):
@@ -203,22 +204,3 @@ def extract_data(output_dir, run_number=0):
         print("Data extraction completed successfully.")
     else:
         print("Data extraction encountered an error, see {log_file} for details.")
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--output', '-o', help="Output directory", type=str, required=True)
-    parser.add_argument('--streams-meta', '-m', help="Path to streams meta file", type=str, required=False)
-    parser.add_argument('--steps', '-s',
-                        help="Only perform a specific step of simulation (0=All (default), 1=Simulate, 2=Extract data, 3=Evaluate results)",
-                        default=0, type=int)
-    args = parser.parse_args()
-
-    if (args.steps == 0) or (args.steps == 2):
-        extract_data(args.output)
-
-    if (args.steps == 0) or (args.steps == 3):
-        # Check streams meta argument given
-        if args.streams_meta is None:
-            raise ValueError("Streams meta file is required for evaluation of results.")
-        eval_results(args.output, args.streams_meta)

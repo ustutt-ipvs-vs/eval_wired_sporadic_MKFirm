@@ -105,13 +105,16 @@ The number of runs and the duration of each run can be adjusted in the `settings
 ### Data Extraction From the Simulation Results
 
 Due to the size of the simulation results (`.vec` and `.sca` files), we cannot publish them in the raw format.
-However, the provided `single_scenario_long.py` script extracts the important information and stores it in the `results_merged.pkl` file.
+However, the provided `single_scenario_long.py` script extracts the important information and stores it in the `results.pkl` file.
 This file is provided as part of the dataset.
 
 ### Evaluation
-**TOOD: There is also a `results.pkl` but i don't think we need it**
-
 When executing the `single_scenario_long.py` script and the `results.pkl` file is present, it reads the data from this file instead of the raw simulation results.
-Based on this data, the metrics provided in the paper are calculated.
 
-**TODO: I need to clean up this file, there is a lot of functionality that is not used in the paper at all**
+The script then performs the following actions:
+1. Merge the runs of each approach (will print some statistics) => merged file will be saved to `results_merged.pkl` and used if the script is executed again.
+- Perform a sanity check to ensure all deadlines are met with a log per stream containing the following information (green output means sanity check passed):
+  - Total number of frames received
+  - Number of frames being delayed by a sporadic stream
+  - Number of frames arriving outside of the specification (too early or too late). For a correct schedule this is always 0. If any of the numbers should be non-zero, the log is printed in another color besides green.
+- Calculate and print the worst-case delay for all isochronous streams and sporadic streams and the worst case jitter for all isochronous streams.
