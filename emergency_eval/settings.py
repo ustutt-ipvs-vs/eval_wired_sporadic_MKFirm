@@ -20,4 +20,5 @@ num_workers = num_cpu_threads // cplex_threads
 EVAL_PATH_SIM = "./dsn_eval/simulation"
 INET_PATH = "/path/to/inet"
 num_runs = 100
+sim_time_seconds = 10
 num_sim_workers = num_cpu_threads - 1

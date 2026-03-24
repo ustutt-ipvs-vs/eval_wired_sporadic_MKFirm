@@ -146,7 +146,7 @@ def generate_network(topology, output):
 
 ini_base = '''[General]
 network = "EmergencyNetwork"
-sim-time-limit = 10s
+sim-time-limit = {simtime}s
 repeat = {repeat}
 
 **.meanBitLifeTimePerPacket:vector.vector-recording = true
@@ -248,7 +248,7 @@ def add_mac_entries(devices, stream_properties):
         })
 
 
-def generate_omnetpp_ini(topology, streams: Dict[int, TtStream], emergency_streams, devices, gcls, repeat, output):
+def generate_omnetpp_ini(topology, streams: Dict[int, TtStream], emergency_streams, devices, gcls, repeat, sim_time_seconds, output):
     identifier_mapping = []
     pcp_mappings = []
     generate_apps(devices, identifier_mapping, pcp_mappings, streams, topology)
@@ -280,7 +280,7 @@ def generate_omnetpp_ini(topology, streams: Dict[int, TtStream], emergency_strea
                 gcl_str += gcl_base.format(name=devices[device_id]["name"], port=port, pcp=pcp, **gcl_entry)
 
     with open(os.path.join(output, "omnetpp.ini"), "w") as f:
-        f.write(ini_base.format(apps=device_str, repeat=repeat,
+        f.write(ini_base.format(apps=device_str, repeat=repeat, simtime=sim_time_seconds,
                                 identifier_mapping=identifier_mapping_spacing.join(identifier_mapping),
                                 pcp_mapping=pcp_mapping_spacing.join(pcp_mappings), gcls=gcl_str))
 
@@ -637,7 +637,7 @@ def generate_stream_meta(topology, streams, devices, output):
     with open(os.path.join(output, "stream_meta.json"), "w") as f:
         json.dump(stream_meta, f, indent=4)
 
-def generate_scenario(a_topology, a_streams, a_emergency_streams, a_transmission, a_gcl, a_output, repeat=1, ignore_highest_pcp=False):
+def generate_scenario(a_topology, a_streams, a_emergency_streams, a_transmission, a_gcl, a_output, repeat=1, sim_time_seconds=10, ignore_highest_pcp=False):
     topology = parse_topology(a_topology)
     streams = parse_streams(topology, a_streams)
     e_streams = parse_emergency_streams(a_emergency_streams)
@@ -655,24 +655,7 @@ def generate_scenario(a_topology, a_streams, a_emergency_streams, a_transmission
         pass
 
     add_route_to_emergency_streams(e_streams, devices)
-    generate_omnetpp_ini(topology, streams, e_streams, devices, gcls, repeat, a_output)
+    generate_omnetpp_ini(topology, streams, e_streams, devices, gcls, repeat, sim_time_seconds, a_output)
     generate_stream_meta(topology, streams, devices, a_output)
 
     print(topology, streams)
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--topology', '-t', help="Topology path", type=str, required=True)
-    parser.add_argument('--streams', '-s', help="Stream path", type=str, required=True)
-    parser.add_argument('--emergency_streams', '-e', help="Emergency stream path", type=str, required=True)
-    parser.add_argument('--transmission', '-m',
-                        help="Path of Transmission Output (first scheduler, i.e. E-TSN/cp-based)", type=str,
-                        required=True)
-    parser.add_argument("--gcl", "-g",
-                        help="Path to GCL output, i.e. libtsndgm (if not provided, GCL is calculated from the transmission parameter, this is required for E-TSN)",
-                        type=str, required=False)
-    parser.add_argument("--output", "-o", help="Output path", type=str, required=True)
-    args = parser.parse_args()
-
-    generate_scenario(args.topology, args.steams, args.emergency_streams, args.transmission, args.gcl, args.output)
