@@ -1,7 +1,7 @@
 import os
 
 # Settings for the Schedulability analysis
-EVAL_PATH_SCHED = "/scratch/haugls2/emergency/"
+EVAL_PATH_SCHED = "./dsn_eval/schedulability"
 
 ## Settings for the scheduler phase
 cplex_path = "/home/haugls/cplex/cpoptimizer/bin/x86-64_linux/cpoptimizer"
