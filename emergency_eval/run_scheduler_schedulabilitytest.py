@@ -1,10 +1,48 @@
+import argparse
+import json
 import os
+import shlex
+import subprocess
+import time
 from concurrent.futures import ThreadPoolExecutor
 
-from emergency_eval.run_scheduler import run_scheduler
-from emergency_eval.settings import EVAL_PATH, estn_scheduler_path, cplex_path, libtsndgm_path, cp_based_scheduling_path, \
+from fontTools.misc.cython import returns
+from networkx.algorithms.coloring.greedy_coloring import strategy_largest_first
+
+from emergency_eval.settings import EVAL_PATH_SCHED, estn_scheduler_path, cplex_path, libtsndgm_path, cp_based_scheduling_path, \
     cplex_timelimit, cplex_threads, num_workers
 
+def run_scheduler(exec_command, out_dir, out_file_basename):
+    log_file = f"{out_dir}/{out_file_basename}.log"
+    meta_file = f"{out_dir}/{out_file_basename}_meta.json"
+
+    if os.path.exists(log_file):
+        print("Skipping, already exists", log_file)
+        return
+
+    print(f"Running scheduler with command: {exec_command}")
+    start_time = time.time()
+    p = subprocess.Popen(shlex.split(exec_command), stdout=open(log_file, "w"), stderr=subprocess.STDOUT)
+    p.communicate()
+    end_time = time.time()
+
+    # Write meta information to the meta file
+    elapsed_time = end_time - start_time
+    meta = {
+        "command": exec_command,
+        "start_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time)),
+        "end_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(end_time)),
+        "elapsed_time": elapsed_time,
+        "return_code": p.returncode
+    }
+    with open(meta_file, "w") as meta_f:
+        json.dump(meta, meta_f, indent=4)
+
+    # Check if the process completed successfully
+    if p.returncode == 0:
+        print("Scheduler completed successfully.")
+    else:
+        print("Scheduler encountered an error.")
 
 def run_scheduler_for_et_streams(top_folder, stream_folder, et_folder):
     tt_stream_file = f"{top_folder}/{stream_folder}/streams.json"
@@ -16,11 +54,6 @@ def run_scheduler_for_et_streams(top_folder, stream_folder, et_folder):
     etsn_out_file = f"{out_dir}/{etsn_out_basename}.json"
     exec_command_etsn = f'python3 {estn_scheduler_path} -n {top_folder}/topology.json -t {tt_stream_file} -e {et_stream_file} --cplex {cplex_path} -o {etsn_out_file} --timelimit {cplex_timelimit} --threads {cplex_threads}'
     run_scheduler(exec_command_etsn, out_dir, etsn_out_basename)
-
-    etsn2_out_basename = "etsn2_out"
-    etsn2_out_file = f"{out_dir}/{etsn2_out_basename}.json"
-    exec_command_etsn2 = f'python3 {estn_scheduler_path} -N 2 -n {top_folder}/topology.json -t {tt_stream_file} -e {et_stream_file} --cplex {cplex_path} -o {etsn2_out_file} --timelimit {cplex_timelimit} --threads {cplex_threads}'
-    run_scheduler(exec_command_etsn2, out_dir, etsn2_out_basename)
 
     cp_file = f"{top_folder}/{stream_folder}/cp_out.json"
     libtsndgm_out_basename = "libtsndgm_out"
@@ -46,7 +79,6 @@ def run_scheduler_for_topology(top_folder):
             if stream_folder.startswith("p_"):
                 for run_folder in os.listdir(f"{top_folder}/{stream_folder}"):
                     if run_folder.startswith("r_"):
-                        # run_for_runfolder(top_folder, stream_folder, run_folder)
                         executor.submit(run_for_runfolder, top_folder, stream_folder, run_folder)
 
         for future in futures:
@@ -54,6 +86,7 @@ def run_scheduler_for_topology(top_folder):
 
 
 def run_for_runfolder(top_folder, stream_folder, run_folder):
+    print(top_folder, stream_folder, run_folder)
     run_scheduler_for_tt_streams(f"{top_folder}", f"{stream_folder}/{run_folder}")
     for et_folder in os.listdir(f"{top_folder}/{stream_folder}/{run_folder}"):
         if et_folder.startswith("et_"):
@@ -61,8 +94,23 @@ def run_for_runfolder(top_folder, stream_folder, run_folder):
 
 
 if __name__ == "__main__":
-    for folder in os.listdir(EVAL_PATH):
-        if folder.startswith("t_"):
-        # if folder.startswith("l_"):
-            folder = f"{EVAL_PATH}/{folder}"
-            run_scheduler_for_topology(folder)
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--run-folder", "-r", required=False, default=None, help="Run only for specific run folder")
+    args = parser.parse_args()
+
+    if args.run_folder:
+        run_folder = os.path.abspath(args.run_folder)
+        stream_folder = os.path.abspath(os.path.join(run_folder, os.pardir))
+        top_folder = os.path.abspath(os.path.join(stream_folder, os.pardir))
+
+        stream_folder_name = os.path.basename(stream_folder)
+        run_folder_name = os.path.basename(run_folder)
+
+        run_for_runfolder(top_folder, stream_folder_name, run_folder_name)
+
+    else:
+        for folder in os.listdir(EVAL_PATH_SCHED):
+            if folder.startswith("t_"):
+                folder = f"{EVAL_PATH_SCHED}/{folder}"
+                run_scheduler_for_topology(folder)

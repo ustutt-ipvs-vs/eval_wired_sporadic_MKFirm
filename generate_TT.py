@@ -72,23 +72,3 @@ def main(topology, config, output, force_host=None):
 
     with open(output, 'w') as f_output:
         json.dump([s.to_json() for s in streams], f_output, indent=4)
-
-if __name__ == "__main__":
-    ##############
-    # data loading
-    ##############
-    # program arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--topology', type=str, required=True, help='Path to topology file')
-    parser.add_argument('-i', '--ini', type=str, required=True, help='Path to the ini file with the stream parameters')
-    parser.add_argument('-o', '--output', help='Output file', default='examples/streams.json')
-
-    args = parser.parse_args()
-
-    # read config file
-    config = configparser.ConfigParser()
-    if not os.path.isfile(args.ini):
-        raise FileNotFoundError
-    config.read(args.ini)
-
-    main(args.topology, config, args.output)
