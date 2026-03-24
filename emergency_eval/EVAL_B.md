@@ -64,6 +64,12 @@ The following files are provided:
 - `[prefix].log`: The output log of the scheduler.
 - `[prefix]_meta.json`: Further metadata (such as the runtime and exit code).
 
+### Results
+
+Using the `eval_schedulability.py` script, the results used in the paper are calculated.
+It yields two matplotlib figures (which are merged to Fig 8a in the paper) and generates a `results_24.json` file with
+the raw numbers shown in the figure.
+
 ## 2. Worst-Case Analysis (Simulation)
 
 In this section, we describe how the worst-case analysis can be reproduced.
