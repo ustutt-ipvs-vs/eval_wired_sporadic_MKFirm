@@ -22,7 +22,7 @@ In order to execute the scheduling step, further repositories need to be cloned 
 Furthermore, an installation of the cplex optimized needs to be present.
 We cannot ship CPLEX separately as part of these artifacts, as a license is required.
 A free academic license including the installer can be found [here](https://academic.ibm.com/a2mt/email-auth#/).
-After installation plese adjust the `cplex_path` in the `settings.py` file to the location of your `cpotimizer` file on your system.
+After installation plese adjust the `cplex_path` in the `settings.py` file to the location of the `cpotimizer` binary file on your system.
 
 ### Topology Generation
 
