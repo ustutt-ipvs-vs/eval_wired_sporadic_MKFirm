@@ -86,13 +86,15 @@ Futhermore, the scheduling results of the previous section for `p_24/r_9/et_24` 
 Please make sure the `opp_run` executable of OMNeT++ is available in the PATH.
 
 Please also make sure to adjust the other parameters in the `settings.py` file.
-For the evaluation of our paper we had 100 distinct runs, which takes significant time.
-To shorten this, the number of runs can be decreased.
 
 ### Simulation Generation and Execution
 Based on the provided topology and streamset file of the above scenario, an OMNeT++ simulation is generated and then executed using the `simulate_single_scenario_long.py` file.
 The generated simulation files (`omnetpp.ini` and `Scenario.ned`) are contained in the `libtsndgm` for our approach and the `etsn` folder for E-TSN.
 Futhermore, when generating the simulation scenario an additional `streams_meta.json` file is provided which is used in the final evaluation step.
+
+For the paper we evaluated 100 simulation runs each with a duration of 10 seconds in simulation time (on our system 1 simulated second took approximately 100 real seconds).
+Thus, the simulation can take a significant amount of time and system resources to execute.
+The number of runs and the duration of each run can be adjusted in the `settings.py` file.
 
 ### Data Extraction From the Simulation Results
 
