@@ -18,8 +18,28 @@ Depending on your environment you may need to adjust the `PYTHONPATH` using the 
 $ export PYTHONPATH=$PYTHONPATH:..:.
 ```
 
-**TODO add something about the required pythonpackets here**
+#### Python Packages
 
+We recommend creating a conda environment with the provided `environment.yml` file:
+
+```shell
+conda env create -f environment.yml
+```
+
+Otherwise, Python 3.12 with the following dependencies is required:
+- networkx=3.1
+- pygraphviz=1.9 (conda-forge)
+- lxml
+- numpy>=1.26,<2.0
+- matplotlib>=3.8,<4.0
+
+Additional requirements for running the schedulers:
+- docplex (ibmdecisionoptimization)
+
+Additional requirements for running the worst case analysis:
+- graph-tool (conda-forge)
+- natsort
+- pandas
 
 ## 1. Schedulability analysis
 
@@ -45,7 +65,7 @@ The generated topology file `topology.json` used in our evaluation is provided i
 
 ### Streamset generation
 
-The streamsets are generated executing the `gen_streams.py` script.
+The streamsets are generated executing the `gen_streams_schedulabilitytest.py` script.
 
 The resulting streamsets used in our paper are provided in the `p_24` folder (inside of `t_3x4`) of the dataset with the following structure:
 - Each `r_x` folder contains one isochronous streamset `streams.json` and multiple `et_y` subfolders.
@@ -56,7 +76,7 @@ The resulting streamsets used in our paper are provided in the `p_24` folder (in
 For the schedule calculation the following projects are required:
 1. Our approch:
    1. The CP-based scheduler for the primary schedule for isochronous streams: https://github.com/ustutt-ipvs-vs/primary_cp_schedule_MKFirm
-   2. Our augmentation approach: https://github.com/ustutt-ipvs-vs/schedule_augmentation_MKFirm
+   2. Our augmentation approach: https://github.com/ustutt-ipvs-vs/schedule_augmentation_MKFirm (needs to be build locally, see README.md)
 2. Our implementation of E-TSN: https://github.com/ustutt-ipvs-vs/etsn_MKFirm
 
 To execute the scheduling phase, the paths in the `settings.py` file needs to be to the location of the repositories on your system.
@@ -112,7 +132,7 @@ Please also make sure to adjust the other parameters in the `settings.py` file.
 ### Simulation Generation and Execution
 Based on the provided topology and streamset file of the above scenario, an OMNeT++ simulation is generated and then executed using the `simulate_single_scenario_long.py` file.
 The generated simulation files (`omnetpp.ini` and `Scenario.ned`) are contained in the `libtsndgm` for our approach and the `etsn` folder for E-TSN.
-Futhermore, when generating the simulation scenario an additional `streams_meta.json` file is provided which is used in the final evaluation step.
+Furthermore, when generating the simulation scenario an additional `streams_meta.json` file is provided which is used in the final evaluation step.
 
 For the paper we evaluated 100 simulation runs each with a duration of 10 seconds in simulation time (on our system 1 simulated second took approximately 100 real seconds).
 Thus, the simulation can take a significant amount of time and system resources to execute.
@@ -121,16 +141,16 @@ The number of runs and the duration of each run can be adjusted in the `settings
 ### Data Extraction From the Simulation Results
 
 Due to the size of the simulation results (`.vec` and `.sca` files), we cannot publish them in the raw format.
-However, the provided `single_scenario_long.py` script extracts the important information and stores it in the `results.pkl` file.
+However, the provided `eval_single_long.py` script extracts the important information and stores it in the `results.pkl` file.
 This file is provided as part of the dataset.
 
 ### Evaluation
-When executing the `single_scenario_long.py` script and the `results.pkl` file is present, it reads the data from this file instead of the raw simulation results.
+When executing the `eval_single_long.py` script and the `results.pkl` file is present, it reads the data from this file instead of the raw simulation results.
 
 The script then performs the following actions:
 1. Merge the runs of each approach (will print some statistics) => merged file will be saved to `results_merged.pkl` and used if the script is executed again.
 2. Perform a sanity check to ensure all deadlines are met with a log per stream containing the following information (green output means sanity check passed):
-  - Total number of frames received
-  - Number of frames being delayed by a sporadic stream
-  - Number of frames arriving outside of the specification (too early or too late). For a correct schedule this is always 0. If any of the numbers should be non-zero, the log is printed in another color besides green.
+   - Total number of frames received
+   - Number of frames being delayed by a sporadic stream
+   - Number of frames arriving outside of the specification (too early or too late). For a correct schedule this is always 0. If any of the numbers should be non-zero, the log is printed in another color besides green.
 3. Calculate and print the worst-case delay for all isochronous streams and sporadic streams and the worst case jitter for all isochronous streams.

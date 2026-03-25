@@ -149,7 +149,6 @@ def compare_results_single_stream(results_by_folder):
     ax1.yaxis.set_major_formatter(FuncFormatter(seconds_to_microseconds))
     ax1.set_ylabel("delay [µs]")
     fig1.tight_layout()
-    print(data_delay)
     rows_delay = []
     print("Delays")
 
@@ -192,7 +191,6 @@ def compare_results_single_stream(results_by_folder):
     ax2.set_ylabel("offset to expected [µs]")
     fig2.tight_layout()
     plt.show()
-    print(data_jitter)
     rows_jitter = []
     print("jitter")
     for i in range(len(jitters)):
