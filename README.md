@@ -23,7 +23,7 @@ $ export PYTHONPATH=$PYTHONPATH:..:.
 We recommend creating a conda environment with the provided `environment.yml` file:
 
 ```shell
-conda env create -f environment.yml
+$ conda env create -f environment.yml
 ```
 
 Otherwise, Python 3.12 with the following dependencies is required:
