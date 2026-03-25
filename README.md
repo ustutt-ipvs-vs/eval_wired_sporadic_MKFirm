@@ -1,7 +1,7 @@
 # Evaluation in Wired TSN with Sporadic Release Times
 
 This document describes how to reproduce the results Section VI.B _Evaluation in Wired TSN with Sporadic Release Times_ of the paper _An (m, k)-firm Elevation Policy for Weakly Hard  Real-Time in Converged 5G-TSN Networks_.
-For more context please refer to this README **TODO add link**.
+For more context please refer to this document: https://doi.org/10.5281/zenodo.19224732
 
 We provide the results of all intermeduate steps so each step can be reproduced individually.
 
