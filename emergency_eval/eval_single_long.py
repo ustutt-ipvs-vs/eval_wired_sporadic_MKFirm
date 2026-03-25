@@ -69,29 +69,6 @@ def merge_runs_for_path(results, path, results_merged):
     results_merged[path]["metrics"] = metrics
 
 
-def single_streams(results_merged):
-    # Compare results
-    import pandas as pd
-    df = pd.DataFrame()
-    # Add column names without content
-    df = df.reindex(
-        columns=["scheduler", "type", "stream", "lower_whisker", "lower_quartile", "median", "mean", "upper_quartile",
-                 "upper_whisker", "outliers"])
-    for folder, folder_data in results_merged.items():
-        folder_name = os.path.basename(folder)
-        for stream_name, stream_data in folder_data["streams"].items():
-            # Add stream data to DataFrame
-            df = df.append({
-                "scheduler": folder_name,
-                "type": "tt",
-                "stream": stream_name,
-                "delays": stream_data['delay'][1],
-            }, ignore_index=True)
-            pass
-        for emergency_stream_name, emergency_stream_data in folder_data["emergency_streams"].items():
-            pass
-        pass
-
 
 if __name__ == "__main__":
     top_folder = os.path.join(EVAL_PATH_SIM, "t_3x4")
