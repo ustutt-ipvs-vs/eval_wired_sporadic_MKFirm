@@ -17,7 +17,7 @@ num_workers = num_cpu_threads // cplex_threads
 
 
 # Settings for the Worst Case Analysis Simulation
-EVAL_PATH_SIM = "./dsn26_simulation"
+EVAL_PATH_SIM = "./dsn26_worstcase"
 INET_PATH = "/path/to/inet"
 num_runs = 100
 sim_time_seconds = 10
