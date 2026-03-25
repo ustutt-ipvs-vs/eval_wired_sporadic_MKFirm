@@ -15,10 +15,12 @@ def eval_for_path_with_run(path, run_num, results):
 
     metrics = calc_metrics(streams, streams_meta, False)
 
-    if path not in results:
-        results[path] = {}
+    key = os.path.basename(path)
 
-    results[path][run_num] = {
+    if key not in results:
+        results[key] = {}
+
+    results[key][run_num] = {
         'streams': streams,
         'emergency_streams': emergency_streams,
         'streams_meta': streams_meta,
@@ -97,7 +99,6 @@ if __name__ == "__main__":
     scenario_folder = os.path.join(run_folder, "et_24")
 
     et_out = f"{scenario_folder}/etsn"
-    et_out_2 = f"{scenario_folder}/etsn2"
     lib_out = f"{scenario_folder}/libtsndgm"
 
     eval_folders = [
@@ -140,7 +141,7 @@ if __name__ == "__main__":
 
     # Perform evaluation on merged results
     print("Sanity check")
-    for folder in eval_folders:
+    for folder in results_merged:
         check_arrival_times(results_merged[folder]["streams"])
 
         print(folder, results_merged[folder]["metrics"])
