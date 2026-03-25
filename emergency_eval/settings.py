@@ -5,9 +5,9 @@ EVAL_PATH_SCHED = "./dsn26_schedulability"
 
 ## Settings for the scheduler phase
 cplex_path = "/home/haugls/cplex/cpoptimizer/bin/x86-64_linux/cpoptimizer"
-cp_based_scheduling_path = "../../cp-based-tsn-scheduling/main.py"
-estn_scheduler_path = "../../e-tsn/main.py"
-libtsndgm_path = "../../libtsndgm/release/DgmExec"
+cp_based_scheduling_path = "../../primary_cp_schedule_MKFirm/main.py"
+estn_scheduler_path = "../../etsn_MKFirm/main.py"
+libtsndgm_path = "../../schedule_augmentation_MKFirm/release/DgmExec"
 
 cplex_timelimit = 30 * 60 # 30 minutes
 

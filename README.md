@@ -129,8 +129,8 @@ When executing the `single_scenario_long.py` script and the `results.pkl` file i
 
 The script then performs the following actions:
 1. Merge the runs of each approach (will print some statistics) => merged file will be saved to `results_merged.pkl` and used if the script is executed again.
-- Perform a sanity check to ensure all deadlines are met with a log per stream containing the following information (green output means sanity check passed):
+2. Perform a sanity check to ensure all deadlines are met with a log per stream containing the following information (green output means sanity check passed):
   - Total number of frames received
   - Number of frames being delayed by a sporadic stream
   - Number of frames arriving outside of the specification (too early or too late). For a correct schedule this is always 0. If any of the numbers should be non-zero, the log is printed in another color besides green.
-- Calculate and print the worst-case delay for all isochronous streams and sporadic streams and the worst case jitter for all isochronous streams.
+3. Calculate and print the worst-case delay for all isochronous streams and sporadic streams and the worst case jitter for all isochronous streams.
