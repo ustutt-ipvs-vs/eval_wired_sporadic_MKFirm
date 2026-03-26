@@ -47,6 +47,8 @@ This section describes how to reproduce the schedulability analysis of the paper
 
 **Datasets**: All (intermediate) results of this section are contained in the `dsn26_schedulability.zip` file.
 
+After following the [Prerequisites](#prerequisites), you can jump right into any of the following steps and start from there by using the provided intermediate results from datasets of the previous sections.
+
 ### Prerequisites
 
 Before executing any code, please adjust the settings in the `emergency_eval/settings.py` file.
@@ -167,10 +169,45 @@ In this section, we describe how the worst-case analysis can be reproduced.
 The streamset with 24 isochronous and 24 sporadic streams used for the simulation-based worst-case analysis is provided
 in folder `p_24/r_9/et_24` of the schedulability analysis dataset.
 
-**Datasets**: All (intermediate) results of this section are contained in the `dsn26_worstcase.zip` file.
+**Datasets**: The (intermediate) results of this section are contained in the `dsn26_worstcase.zip` file.
 
+The worst case analysis is performed using OMNeT++ simulations.
+Due to the number of runs performed, reproducing the exact results of the paper requires significant system resources and time.
+Thus, we provide the following options:
+1. A Dockerfile with a single run command (see [this](#docker) section), that:
+   - Contains all required prerequisites
+   - Performs a few short runs of the simulation
+   - Evaluates the results of these few runs
+2. A detailed description listing all requirements and steps to perform the full simulation and evaluation.
+   (See section [Manual Execution](#manual-execution)
 
-### Prerequisites
+In any case, the scheduling results of the previous section for `dsn26_schedulability/t_3x4/p_24/r_9/et_24` need to be available
+(either by self executing or from the provided datasets)
+
+### Docker
+
+By default, the docker environment is set up to only perform 2 simulation runs of 1s each (instead of 100 runs with 10s each as used in the paper).
+These settings can also be adjusted using the `emergency_eval/settings_docker.py` file.
+
+To build and run the docker container and print the result, please execute the following two commands:
+
+```shell
+docker build --progress=plain -t eval_wired_sporadic_mkfirm .
+docker run --rm -v $(pwd)/dsn26_schedulability:/usr/src/workspace/eval_wired_sporadic_MKFirm/dsn26_schedulability -v $(pwd)/dsn26_worstcase_docker:/usr/src/workspace/eval_wired_sporadic_MKFirm/dsn26_worstcase eval_wired_sporadic_mkfirm
+```
+
+After the execution this will print the results to the console.
+For an interpretation of this please refer to the [Evaluation](#evaluation) section and the paper.
+
+### Manual Execution
+This section describes how to reproduce the exact results as presented in our paper.
+This requires significant time and system resources!
+
+In case you've downloaded the simulation results (`dsn26_worstcase.zip` from the dataset),
+you can directly jump to the [Evaluation](#evaluation) section and perform the evaluation script
+based on the provided `results.pkl` file.
+
+#### Prerequisites
 
 In order to execute the simulations of this section, a working installation of OMNeT++ and INET is required. 
 The versions used for the simulation in this paper are:
@@ -183,8 +220,13 @@ Please make sure the `opp_run` executable of OMNeT++ is available in the `PATH` 
 
 Please also make sure to adjust the other parameters in the `settings.py` file.
 
-### Simulation Generation and Execution
+#### Simulation Generation and Execution
 Based on the provided topology and streamset file of the above scenario, an OMNeT++ simulation is generated and then executed using the `simulate_single_scenario_long.py` file.
+
+```shell
+python3 emergency_eval/simulate_single_scenario_long.py
+```
+
 The generated simulation files (`omnetpp.ini` and `Scenario.ned`) are contained in the `libtsndgm` for our approach and the `etsn` folder for E-TSN.
 Furthermore, when generating the simulation scenario an additional `streams_meta.json` file is provided which is used in the final evaluation step.
 
@@ -192,14 +234,24 @@ For the paper we evaluated 100 simulation runs each with a duration of 10 second
 Thus, the simulation can take a significant amount of time and system resources to execute.
 The number of runs and the duration of each run can be adjusted in the `settings.py` file.
 
-### Data Extraction From the Simulation Results
+#### Data Extraction From the Simulation Results
 
 Due to the size of the simulation results (`.vec` and `.sca` files), we cannot publish them in the raw format.
 However, the provided `eval_single_long.py` script extracts the important information and stores it in the `results.pkl` file.
 This file is provided as part of the dataset.
 
-### Evaluation
+To extract the simulation results from your own simulation runs, you can execute the following command:
+
+```shell
+python3 emergency_eval/eval_single_long.py
+```
+
+#### Evaluation
 When executing the `eval_single_long.py` script and the `results.pkl` file is present, it reads the data from this file instead of the raw simulation results.
+
+```shell
+python3 emergency_eval/eval_single_long.py
+```
 
 The script then performs the following actions:
 1. Merge the runs of each approach (will print some statistics) => merged file will be saved to `results_merged.pkl` and used if the script is executed again.

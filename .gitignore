@@ -3,3 +3,5 @@ examples/
 __pycache__
 dsn26_schedulability
 dsn26_worstcase
+dsn26_worstcase_docker
+results_24.json
