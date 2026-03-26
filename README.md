@@ -196,6 +196,8 @@ docker build --progress=plain -t eval_wired_sporadic_mkfirm .
 docker run --rm -v $(pwd)/dsn26_schedulability:/usr/src/workspace/eval_wired_sporadic_MKFirm/dsn26_schedulability -v $(pwd)/dsn26_worstcase_docker:/usr/src/workspace/eval_wired_sporadic_MKFirm/dsn26_worstcase eval_wired_sporadic_mkfirm
 ```
 
+_Note: Building the docker container still requires some time, as the whole OMNeT++ and INET project is built from source._
+
 After the execution this will print the results to the console.
 For an interpretation of this please refer to the [Evaluation](#evaluation) section and the paper.
 
