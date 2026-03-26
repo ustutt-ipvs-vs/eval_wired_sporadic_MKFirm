@@ -96,18 +96,21 @@ def run_for_runfolder(top_folder, stream_folder, run_folder):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--run-folder", "-r", required=False, default=None, help="Run only for specific run folder")
+    parser.add_argument("--folder", "-f", required=False, default=None, help="Run only for specific run folder")
     args = parser.parse_args()
 
-    if args.run_folder:
-        run_folder = os.path.abspath(args.run_folder)
+    if args.folder:
+        et_folder = os.path.abspath(args.folder)
+        run_folder = os.path.abspath(os.path.join(et_folder, os.pardir))
         stream_folder = os.path.abspath(os.path.join(run_folder, os.pardir))
         top_folder = os.path.abspath(os.path.join(stream_folder, os.pardir))
 
         stream_folder_name = os.path.basename(stream_folder)
         run_folder_name = os.path.basename(run_folder)
+        et_folder_name = os.path.basename(et_folder)
 
-        run_for_runfolder(top_folder, stream_folder_name, run_folder_name)
+        run_scheduler_for_tt_streams(f"{top_folder}", f"{stream_folder_name}/{run_folder_name}")
+        run_scheduler_for_et_streams(top_folder, f"{stream_folder_name}/{run_folder_name}/", et_folder_name)
 
     else:
         for folder in os.listdir(EVAL_PATH_SCHED):
