@@ -181,8 +181,8 @@ Thus, we provide the following options:
 2. A detailed description listing all requirements and steps to perform the full simulation and evaluation.
    (See section [Manual Execution](#manual-execution)
 
-In any case, the scheduling results of the previous section for `dsn26_schedulability/t_3x4/p_24/r_9/et_24` need to be available
-(either by self executing or from the provided datasets)
+**Note:** In any case, the scheduling results of the previous section for `dsn26_schedulability/t_3x4/p_24/r_9/et_24` need to be available
+(either by self executing or downloaded from the provided datasets)!
 
 ### Docker
 
